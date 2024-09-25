@@ -1,0 +1,47 @@
+.navbar{
+    background-color: rgb(0, 0, 0);
+    height: 12vh;
+}
+.navbar ul {
+    list-style-type: none;  /* Remove bullets from the list */
+    margin: 0;
+    padding: 0;
+    display: flex;          /* Use flexbox for alignment */
+    justify-content: center; /* Center the <li> elements horizontally */
+}
+
+/* Styling for <li> and <a> elements */
+.navbar ul li {
+    margin: 0 10px;         /* Add space between the links */
+}
+
+.navbar ul li a {
+    color: white;           /* Link text color */
+    text-decoration: none;  /* Remove underline from links */
+    font-size: 18px;        /* Set the font size */
+}
+
+.navbar ul li a:hover {
+    color: #ddd;            /* Change link color on hover */
+}
+.home_text{
+    margin-left: -11vh;
+    margin-top: 2vh;
+}
+.my_bookings{
+    margin-top: 2vh;
+}
+.gouter_name{
+    color: white;
+    margin-left: -10vh;
+    font-size: 7vh;
+}
+.cart-icon{
+    height: 5vh;
+    width: 5vh;
+    margin-top: -1vh;
+}
+.signup-container{
+    margin-top: 2vh;
+    margin-left: 5vh;
+}
