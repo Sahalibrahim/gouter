@@ -1,0 +1,126 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>seller signup</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
+    {% load static %}
+    <style>
+        .div_main{
+            width: 80vh;
+            border-radius: 20px;
+            /* text-align: center; */
+        }
+        body{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .button_div{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="div_main bg-success">
+        <h2>Restaurant Sign Up</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="button_div" >
+                <button class="submit_btn btn btn-warning" type="submit">Sign Up</button>
+            </div>
+        </form>    
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+    crossorigin="anonymous"></script>
+</body>
+
+</html> -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seller Sign Up</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
+    {% load static %}
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh; /* Full height of the viewport */
+            background-color: #f8f9fa; /* Light background color */
+            margin: 0; /* Remove default margin */
+            background-image: url("{% static 'seller_signup.jpg' %}"); /* Path to static image */
+            background-size: cover; /* Cover the entire screen */
+            background-position: center; /* Center the image */
+            background-repeat: no-repeat; /* No image repetition */
+        }
+
+        .div_main {
+            width: 80vh;
+            max-width: 500px; /* Limit maximum width */
+            border-radius: 20px;
+            padding: 20px; /* Add padding */
+            background-color: transparent; /* Bootstrap success color */
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Add shadow for depth */
+        }
+
+        .div_main h2 {
+            color: black; /* White text for the heading */
+            text-align: center; /* Center the heading */
+        }
+
+        .button_div {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px; /* Space above the button */
+        }
+
+        .restaurant-images {
+            display: flex;
+            justify-content: space-around; /* Space out images */
+            margin-top: 20px; /* Space above the images */
+        }
+
+        .restaurant-images img {
+            width: 150px; /* Set a fixed width for images */
+            height: 100px; /* Set a fixed height for images */
+            border-radius: 10px; /* Round the edges of the images */
+            object-fit: cover; /* Maintain aspect ratio */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="div_main">
+        <h2>Restaurant Sign Up</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="button_div">
+                <button class="submit_btn btn btn-warning" type="submit">Sign Up</button>
+            </div>
+        </form>
+        
+        <!-- <div class="restaurant-images">
+            <img src="https://via.placeholder.com/150x100.png?text=Restaurant+1" alt="Restaurant 1">
+            <img src="https://via.placeholder.com/150x100.png?text=Restaurant+2" alt="Restaurant 2">
+            <img src="https://via.placeholder.com/150x100.png?text=Restaurant+3" alt="Restaurant 3">
+        </div> -->
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+
+</html>
