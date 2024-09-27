@@ -9,13 +9,17 @@ from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.utils import timezone
 from datetime import timedelta
+from sellerapp.models import Seller
+from django.conf import settings
 
 # Create your views here.
 def welcome(request):
     return render(request,'welcome.html')
 
 def home(request):
-    return render(request,'home.html')
+    sellers = Seller.objects.filter(is_approved=False)
+    return render(request, 'home.html', {'sellers': sellers, 'MEDIA_URL': settings.MEDIA_URL})
+
 
 def generate_otp():
     return str(random.randint(100000, 999999))

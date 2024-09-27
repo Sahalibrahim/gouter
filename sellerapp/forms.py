@@ -40,3 +40,15 @@ class SellerSignUpForm(forms.ModelForm):
 class SellerLoginForm(forms.Form):
     email = forms.EmailField(label='Email')
     password = forms.CharField(widget=forms.PasswordInput, label='Password')
+
+
+class SellerProfileForm(forms.ModelForm):
+    class Meta:
+        model = Seller
+        fields = [
+            'restaurant_name', 'owner_name', 'email', 'phone_number', 
+            'password', 'address', 'description', 'table_number','image_url'
+        ]
+        widgets = {
+            'password': forms.PasswordInput(render_value=True),  # Allows displaying a password placeholder
+        }

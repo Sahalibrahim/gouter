@@ -122,10 +122,16 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 # settings.py
-STATIC_URL = '/static/'
+# STATIC_URL = '/static/'
 
+# STATICFILES_DIRS = [
+#     BASE_DIR / "static",
+# ]
+import os
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Directory for collected static files
 STATICFILES_DIRS = [
-    BASE_DIR / "static",
+    os.path.join(BASE_DIR, 'static'),  # Global static folder
 ]
 
 
@@ -146,3 +152,6 @@ EMAIL_HOST_USER = 'gouter580@gmail.com'  # Your Gmail address
 EMAIL_HOST_PASSWORD = 'vjghqkzpehrzaeje'  # Your Gmail app password
 DEFAULT_FROM_EMAIL = 'gouter580@gmail.com'
 
+MEDIA_URL = '/media/'
+# MEDIA_ROOT = BASE_DIR / 'media'  # Or wherever you want to store uploaded files
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

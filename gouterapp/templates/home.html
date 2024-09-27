@@ -81,6 +81,22 @@
             </div>
         </div>
     </nav>
+    <div class="container mt-5">
+        <div class="row">
+            {% for seller in sellers %}
+            <div class="col-md-4">
+                <div class="card mb-4 shadow-sm">
+                    <img src="{{ MEDIA_URL }}{{ seller.image_url }}" class="card-img-top" alt="Restaurant Image">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ seller.restaurant_name }}</h5>
+                        <p class="card-text">{{ seller.description }}</p>
+                        <a href="#" class="btn btn-primary">View Dish</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
 
 
 
