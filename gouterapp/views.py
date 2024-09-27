@@ -9,8 +9,9 @@ from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.utils import timezone
 from datetime import timedelta
-from sellerapp.models import Seller
+from sellerapp.models import Seller,Dish
 from django.conf import settings
+from django.shortcuts import render, get_object_or_404
 
 # Create your views here.
 def welcome(request):
@@ -137,3 +138,13 @@ def resend_otp(request):
     except Profile.DoesNotExist:
         messages.error(request, 'Error resending OTP.')
     return redirect('otp_verification')
+
+def view_dishes(request, restaurant_id):
+    seller = get_object_or_404(Seller, pk=restaurant_id)
+    dishes = Dish.objects.filter(restaurant=seller)
+    context = {
+        'seller': seller,
+        'dishes': dishes,
+        'MEDIA_URL': settings.MEDIA_URL,
+    }
+    return render(request, 'view_dishes.html', context)

@@ -23,7 +23,7 @@ class SignUpForm(UserCreationForm):
         # Automatically generate a unique username
         base_username = f"{user.first_name}_{user.last_name}".lower()
         username = base_username
-        counter = 1
+        # counter = 1
         while User.objects.filter(username=username).exists():
             username = f"{base_username}{counter}"
             counter += 1

@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 import os
 
 class Seller(models.Model):
+    # restaurant_id = models.AutoField(primary_key=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     restaurant_name = models.CharField(max_length=255)
     address = models.TextField()
@@ -34,3 +35,14 @@ class Seller(models.Model):
         if old_image and old_image != self.image_url:
             if os.path.isfile(old_image.path):
                 os.remove(old_image.path)
+
+class Dish(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    price = models.DecimalField(max_digits=6, decimal_places=2)
+    image = models.ImageField(upload_to='dish_images/', blank=True, null=True)
+    restaurant = models.ForeignKey(Seller, on_delete=models.CASCADE)
+
+
+    def __str__(self):
+        return self.name

@@ -12,6 +12,8 @@ urlpatterns = [
     path('login/',views.login_view,name='login'),
     path('profile',views.profile,name='profile'),
     path('logout/',views.logout,name='logout'),
+    path('restaurant/<int:restaurant_id>/dishes',views.view_dishes, name='view_dishes'),
+    
 ]
 
 if settings.DEBUG:

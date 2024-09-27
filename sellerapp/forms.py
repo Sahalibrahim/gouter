@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
-from .models import Seller
+from .models import Seller,Dish
 
 class SellerSignUpForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput, label="Password")
@@ -52,3 +52,9 @@ class SellerProfileForm(forms.ModelForm):
         widgets = {
             'password': forms.PasswordInput(render_value=True),  # Allows displaying a password placeholder
         }
+
+class DishForm(forms.ModelForm):
+    class Meta:
+        model = Dish
+        fields = ['name', 'description', 'price', 'image']
+

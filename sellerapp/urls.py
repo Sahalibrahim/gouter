@@ -9,6 +9,8 @@ urlpatterns = [
     path('dashboard/', views.seller_dashboard, name='seller_dashboard'),
     path('seller_profile/', views.seller_profile, name='seller_profile'),
     path('seller_logout/', views.seller_logout, name='seller_logout'),
+    path('add-dish/',views.add_dish, name='add_dish'),
+    path('seller-dishes/', views.seller_dishes, name='seller_dishes'),
 ]
 
 if settings.DEBUG:

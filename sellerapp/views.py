@@ -1,10 +1,10 @@
 from django.shortcuts import render,redirect,get_object_or_404
 from django.contrib import messages
-from .forms import SellerSignUpForm,SellerLoginForm,SellerProfileForm
+from .forms import SellerSignUpForm,SellerLoginForm,SellerProfileForm,DishForm
 from django.contrib.auth.models import User
 from django.contrib.auth import login,authenticate,logout
 from django.contrib.auth.decorators import login_required
-from .models import Seller
+from .models import Seller,Dish
 
 def seller_signup(request):
     if request.method == 'POST':
@@ -43,8 +43,17 @@ def seller_login(request):
 
     return render(request, 'seller_login.html', {'form': form})
 
+from django.shortcuts import render
+
 def seller_dashboard(request):
-    return render(request, 'seller_dashboard.html')
+    # Assuming you have a Seller model related to the user
+    seller = request.user.seller
+    restaurant_name = seller.restaurant_name  # Replace with actual field name for restaurant name
+    context = {
+        'restaurant_name': restaurant_name
+    }
+    return render(request, 'seller_dashboard.html', context)
+
 
 
 @login_required
@@ -71,3 +80,22 @@ def seller_logout(request):
     logout(request)
     messages.success(request, 'You have been successfully logged out.')
     return redirect('home')
+
+@login_required
+def add_dish(request):
+    if request.method == 'POST':
+        form = DishForm(request.POST, request.FILES)
+        if form.is_valid():
+            dish = form.save(commit=False)
+            dish.restaurant = request.user.seller
+            dish.save()
+            return redirect('seller_dashboard')
+    else:
+        form = DishForm()
+    return render(request, 'add_dish.html', {'form': form})
+
+@login_required
+def seller_dishes(request):
+    seller = request.user.seller
+    dishes = Dish.objects.filter(restaurant=seller)
+    return render(request, 'seller_dishes.html', {'dishes': dishes})

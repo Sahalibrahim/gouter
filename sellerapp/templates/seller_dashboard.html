@@ -48,7 +48,9 @@
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
 
     <!-- Font Awesome CDN for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-Fo3rlrZj/k7ujTnH/PRJdB0E6MaUs+3lVvSCt9e7/J6oIBPbX+Ed7Ynb0Po1I7tThG4oTYT7chcV4Ma9XnZ9Fw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+        integrity="sha512-Fo3rlrZj/k7ujTnH/PRJdB0E6MaUs+3lVvSCt9e7/J6oIBPbX+Ed7Ynb0Po1I7tThG4oTYT7chcV4Ma9XnZ9Fw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <style>
         .navbar {
@@ -63,7 +65,8 @@
 
         .nav-link {
             color: white !important;
-            padding-bottom: 10px; /* Adjust for better visual alignment */
+            padding-bottom: 10px;
+            /* Adjust for better visual alignment */
             position: relative;
         }
 
@@ -72,7 +75,8 @@
             display: block;
             width: 100%;
             height: 2px;
-            background-color: white; /* Underline color */
+            background-color: white;
+            /* Underline color */
             position: absolute;
             bottom: 0;
             left: 0;
@@ -107,20 +111,21 @@
                         <a class="nav-link active" id="dashboard-link" href="#">Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" id="add-dish-link" href="#">Add Dish</a>
+                        <a class="nav-link" id="add-dish-link" href="{% url 'add_dish' %}">Add Dish</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" id="order-list-link" href="#">Order List</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" id="products-link" href="#">Products</a>
+                        <a class="nav-link" id="products-link" href="{% url 'seller_dishes' %}">Dishes</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" id="table-link" href="#">Table</a>
                     </li>
                     <!-- Profile Icon with Dropdown -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle profile-icon" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle profile-icon" href="#" id="profileDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-user-circle"></i>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
@@ -135,8 +140,8 @@
     </nav>
 
     <div class="container mt-5">
-        <!-- Content for the dashboard goes here -->
-        <h1>Welcome to the Seller Dashboard</h1>
+        <!-- Display the restaurant name dynamically -->
+        <h1>Welcome to {{ restaurant_name }}</h1>
         <p>Manage your restaurant's dishes, orders, products, and tables from this dashboard.</p>
     </div>
 
@@ -170,5 +175,6 @@
 </body>
 
 </html>
+
 
 
