@@ -36,13 +36,35 @@ class Seller(models.Model):
             if os.path.isfile(old_image.path):
                 os.remove(old_image.path)
 
+# class Dish(models.Model):
+#     name = models.CharField(max_length=100)
+#     description = models.TextField()
+#     price = models.DecimalField(max_digits=6, decimal_places=2)
+#     image = models.ImageField(upload_to='dish_images/', blank=True, null=True)
+#     restaurant = models.ForeignKey(Seller, on_delete=models.CASCADE)
+
+
+#     def __str__(self):
+#         return self.name
+
 class Dish(models.Model):
+    CATEGORY_CHOICES = [
+        ('Shakes', 'Shakes'),
+        ('Juices', 'Juices'),
+        ('Chinese', 'Chinese'),
+        ('Arabic', 'Arabic'),
+        ('Curry', 'Curry'),
+        ('Mandhi', 'Mandhi'),
+        ('Deserts', 'Deserts'),
+    ]
+
     name = models.CharField(max_length=100)
     description = models.TextField()
     price = models.DecimalField(max_digits=6, decimal_places=2)
     image = models.ImageField(upload_to='dish_images/', blank=True, null=True)
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)  # Add category field
     restaurant = models.ForeignKey(Seller, on_delete=models.CASCADE)
-
+    is_available = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name

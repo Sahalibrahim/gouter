@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seller List - GOUTER Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
+        .sidebar {
+            background-color: #2d2d2d;
+            min-height: 100vh;
+            padding-top: 30px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 240px;
+        }
+        .sidebar h2 {
+            color: #fff;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .sidebar a {
+            color: #fff;
+            display: block;
+            padding: 15px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        .sidebar a:hover, .sidebar .active {
+            background-color: #464646;
+        }
+        .content {
+            margin-left: 240px;
+            padding: 30px;
+            transition: margin-left 0.5s;
+        }
+        .navbar {
+            background-color: #000;
+        }
+        .navbar-brand {
+            color: #fff;
+        }
+        .navbar .nav-link {
+            color: #fff;
+        }
+        .table-container {
+            overflow-x: auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+        }
+        .table th, .table td {
+            vertical-align: middle;
+        }
+        .btn-block, .btn-edit, .btn-delete {
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .btn-block:hover, .btn-edit:hover, .btn-delete:hover {
+            transform: scale(1.1);
+        }
+        {% comment %} .content {
+            padding: 30px;
+            background-color: #fff;
+            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+        } {% endcomment %}
+        {% comment %} .table-container {
+            overflow-x: auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+        }
+        .table th, .table td {
+            vertical-align: middle;
+        }
+        .btn-block, .btn-edit, .btn-delete {
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .btn-block:hover, .btn-edit:hover, .btn-delete:hover {
+            transform: scale(1.1);
+        } {% endcomment %}
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>GOUTER</h2>
+        <a href="{% url 'admin_dashboard' %}" >View User List</a>
+        <a href="{% url 'view_sellers' %}" class="active">View Seller List</a>
+        <a href="#">Seller Details</a>
+        <a href="#">Dish List</a>
+        <a href="#">Orders</a>
+        {% comment %} <a href="#">Coupon</a> {% endcomment %}
+    </div>
+    <div class="content">
+        <nav class="navbar navbar-expand-lg navbar-dark">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">GOUTER</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Profile</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Settings</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'admin_logout' %}">Logout</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <div class="d-flex justify-content-between align-items-center my-4">
+            <h2>Seller List</h2>
+            <form method="GET" action="{% url 'view_sellers' %}" class="d-flex">
+                <input type="text" name="q" class="form-control me-2" placeholder="Search sellers...">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+        </div>
+        
+        {% comment %} <h2>Seller List</h2> {% endcomment %}
+        <div class="table-container">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Restaurant Name</th>
+                        <th>Owner</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                        {% comment %} <th>Edit</th>
+                        <th>Delete</th> {% endcomment %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for seller in sellers %}
+                    <tr>
+                        <td>{{ seller.restaurant_name }}</td>
+                        <td>{{ seller.owner_name }}</td>
+                        <td>{{ seller.email }}</td>
+                        <td>{{ seller.phone_number }}</td>
+                        <td>
+                            {% if seller.is_approved %}
+                                <span class="badge bg-success">Verified</span>
+                            {% elif not seller.is_approved %}
+                                <span class="badge bg-secondary">Pending</span>
+                            {% else %}
+                                <span class="badge bg-danger">Rejected</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'block_seller' seller.id %}" 
+                               class="btn 
+                               {% if seller.is_approved %}btn-danger{% else %}btn-success{% endif %} 
+                               btn-block">
+                               {% if seller.is_approved %}Block{% else %}Approve{% endif %}
+                            </a>
+                        </td>
+                        {% comment %} <td>
+                            <a href="{% url 'edit_seller' seller.id %}" class="btn btn-warning btn-edit">Edit</a>
+                        </td> {% endcomment %}
+                        {% comment %} <td>
+                            <a href="{% url 'delete_seller' seller.id %}" class="btn btn-danger btn-delete">Delete</a>
+                        </td> {% endcomment %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

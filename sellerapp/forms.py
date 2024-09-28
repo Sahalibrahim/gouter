@@ -37,6 +37,8 @@ class SellerSignUpForm(forms.ModelForm):
             seller.save()
         return seller
 
+
+
 class SellerLoginForm(forms.Form):
     email = forms.EmailField(label='Email')
     password = forms.CharField(widget=forms.PasswordInput, label='Password')
@@ -53,8 +55,13 @@ class SellerProfileForm(forms.ModelForm):
             'password': forms.PasswordInput(render_value=True),  # Allows displaying a password placeholder
         }
 
+# class DishForm(forms.ModelForm):
+#     class Meta:
+#         model = Dish
+#         fields = ['name', 'description', 'price', 'image']
+
 class DishForm(forms.ModelForm):
     class Meta:
         model = Dish
-        fields = ['name', 'description', 'price', 'image']
+        fields = ['name', 'description', 'price', 'image', 'category','is_available'] 
 

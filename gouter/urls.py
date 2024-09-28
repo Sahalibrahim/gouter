@@ -23,6 +23,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('',include('gouterapp.urls')),
     path('seller/', include('sellerapp.urls')),
+    path('adminpanel/',include('adminapp.urls')),
 ]
 
 if settings.DEBUG:

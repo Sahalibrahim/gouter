@@ -18,7 +18,7 @@ def welcome(request):
     return render(request,'welcome.html')
 
 def home(request):
-    sellers = Seller.objects.filter(is_approved=False)
+    sellers = Seller.objects.filter(is_approved=True)
     return render(request, 'home.html', {'sellers': sellers, 'MEDIA_URL': settings.MEDIA_URL})
 
 
@@ -139,12 +139,54 @@ def resend_otp(request):
         messages.error(request, 'Error resending OTP.')
     return redirect('otp_verification')
 
-def view_dishes(request, restaurant_id):
-    seller = get_object_or_404(Seller, pk=restaurant_id)
-    dishes = Dish.objects.filter(restaurant=seller)
+# def view_dishes(request, restaurant_id):
+#     seller = get_object_or_404(Seller, pk=restaurant_id)
+#     dishes = Dish.objects.filter(restaurant=seller)
+#     context = {
+#         'seller': seller,
+#         'dishes': dishes,
+#         'MEDIA_URL': settings.MEDIA_URL,
+#     }
+#     return render(request, 'view_dishes.html', context)
+
+# def view_dishes(request, seller_id):
+#     seller = get_object_or_404(Seller, pk=seller_id)
+#     selected_category = request.GET.get('category', 'All')
+    
+#     if selected_category == 'All':
+#         dishes = Dish.objects.filter(restaurant=seller)
+#     else:
+#         dishes = Dish.objects.filter(restaurant=seller, category=selected_category)
+    
+#     categories = Dish.objects.values_list('category', flat=True).distinct()
+    
+#     context = {
+#         'seller': seller,
+#         'dishes': dishes,
+#         'categories': categories,
+#         'selected_category': selected_category,
+#         'MEDIA_URL': settings.MEDIA_URL,
+#     }
+#     return render(request, 'view_dishes.html', context)
+
+def view_dishes(request, seller_id):
+    seller = get_object_or_404(Seller, pk=seller_id)
+    selected_category = request.GET.get('category', 'All')
+
+    # Filter dishes based on availability and category
+    if selected_category == 'All':
+        dishes = Dish.objects.filter(restaurant=seller, is_available=True)
+    else:
+        dishes = Dish.objects.filter(restaurant=seller, category=selected_category, is_available=True)
+    
+    # Get distinct categories from available dishes only
+    categories = Dish.objects.filter(restaurant=seller, is_available=True).values_list('category', flat=True).distinct()
+
     context = {
         'seller': seller,
         'dishes': dishes,
+        'categories': categories,
+        'selected_category': selected_category,
         'MEDIA_URL': settings.MEDIA_URL,
     }
     return render(request, 'view_dishes.html', context)

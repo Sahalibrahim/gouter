@@ -19,7 +19,6 @@ def seller_signup(request):
         form = SellerSignUpForm()
     return render(request, 'seller_signup.html', {'form': form})
 
-
 def seller_login(request):
     if request.method == 'POST':
         form = SellerLoginForm(request.POST)
@@ -43,10 +42,15 @@ def seller_login(request):
 
     return render(request, 'seller_login.html', {'form': form})
 
-from django.shortcuts import render
-
+@login_required(login_url='/login/')  # Ensure the user is logged in
 def seller_dashboard(request):
-    # Assuming you have a Seller model related to the user
+    # Check if the user has an associated seller profile
+    if not hasattr(request.user, 'seller'):
+        # Redirect or show an error if the user is not a seller
+        return redirect('/')  # Redirect to homepage or another appropriate page
+        # Or render an error page like: return render(request, 'not_authorized.html')
+
+    # If the user is a seller, proceed to show the dashboard
     seller = request.user.seller
     restaurant_name = seller.restaurant_name  # Replace with actual field name for restaurant name
     context = {
@@ -99,3 +103,27 @@ def seller_dishes(request):
     seller = request.user.seller
     dishes = Dish.objects.filter(restaurant=seller)
     return render(request, 'seller_dishes.html', {'dishes': dishes})
+
+def toggle_availability(request, id):
+    dish = get_object_or_404(Dish, id=id)
+    if request.method == "POST":
+        dish.is_available = not dish.is_available
+        dish.save()
+    return redirect('seller_dishes')
+
+def edit_dish(request, id):
+    dish = get_object_or_404(Dish, id=id)
+    if request.method == "POST":
+        form = DishForm(request.POST, request.FILES, instance=dish)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Dish details updated successfully.')
+            return redirect('seller_dishes')  # Redirect back to the dishes list
+    else:
+        form = DishForm(instance=dish)
+    
+    context = {
+        'form': form,
+        'dish': dish
+    }
+    return render(request, 'edit_dish.html', context)

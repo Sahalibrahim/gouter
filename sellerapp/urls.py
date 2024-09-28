@@ -11,6 +11,9 @@ urlpatterns = [
     path('seller_logout/', views.seller_logout, name='seller_logout'),
     path('add-dish/',views.add_dish, name='add_dish'),
     path('seller-dishes/', views.seller_dishes, name='seller_dishes'),
+    path('edit-dish/<int:id>/', views.edit_dish, name='edit_dish'),
+    path('toggle-availability/<int:id>/', views.toggle_availability, name='toggle_availability'),
+
 ]
 
 if settings.DEBUG:
