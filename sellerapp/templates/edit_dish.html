@@ -26,13 +26,26 @@
                 {{ form.price }}
             </div>
             <div class="mb-3">
+                <label for="id_category" class="form-label">Category</label>
+                {{ form.category }} <!-- Add category field here -->
+            </div>
+            <div class="mb-3">
                 <label for="id_image" class="form-label">Image</label>
                 {{ form.image }}
+
+                <!-- Current Image Preview -->
                 {% if dish.image %}
                     <div class="mt-2">
-                        <img src="{{ dish.image.url }}" alt="Dish Image" style="width: 150px;">
+                        <img id="current-image" src="{{ dish.image.url }}?{{ dish.updated_at|date:'U' }}" alt="Dish Image" style="width: 150px;">
                     </div>
+                {% else %}
+                    <p>No image uploaded yet.</p>
                 {% endif %}
+
+                <!-- New Image Preview (after file selection) -->
+                <div class="mt-2">
+                    <img id="new-image-preview" src="" alt="New Image Preview" style="width: 150px; display: none;">
+                </div>
             </div>
             <div class="mb-3">
                 <label for="id_is_available" class="form-label">Availability</label>
@@ -40,9 +53,22 @@
             </div>
             <button type="submit" class="btn btn-success">Update Dish</button>
             <a href="{% url 'seller_dishes' %}" class="btn btn-secondary">Cancel</a>
+            <a href="{% url 'seller_dishes' %}" class="btn btn-warning">Go back</a>
         </form>
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Script for previewing new image -->
+    <script>
+        document.getElementById('id_image').addEventListener('change', function(event) {
+            const [file] = event.target.files;
+            if (file) {
+                document.getElementById('new-image-preview').src = URL.createObjectURL(file);
+                document.getElementById('new-image-preview').style.display = 'block';
+            }
+        });
+    </script>
 </body>
 
 </html>

@@ -1,10 +1,11 @@
 from django.shortcuts import render,redirect,get_object_or_404
 from django.contrib import messages
-from .forms import SellerSignUpForm,SellerLoginForm,SellerProfileForm,DishForm
+from .forms import SellerSignUpForm,SellerLoginForm,SellerProfileForm,DishForm,CouponForm
 from django.contrib.auth.models import User
 from django.contrib.auth import login,authenticate,logout
 from django.contrib.auth.decorators import login_required
-from .models import Seller,Dish
+from .models import Seller,Dish,Coupon
+import os
 
 def seller_signup(request):
     if request.method == 'POST':
@@ -111,19 +112,91 @@ def toggle_availability(request, id):
         dish.save()
     return redirect('seller_dishes')
 
-def edit_dish(request, id):
-    dish = get_object_or_404(Dish, id=id)
-    if request.method == "POST":
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+from .models import Dish  # Assuming your dish model is named `Dish`
+from .forms import DishForm  # Assuming you're using a `DishForm` for this view
+
+def edit_dish(request, dish_id):
+    # Get the dish object or return a 404 if not found
+    dish = get_object_or_404(Dish, id=dish_id)
+
+    if request.method == 'POST':
+        # Bind the form with POST data and file (image)
         form = DishForm(request.POST, request.FILES, instance=dish)
+
+        if form.is_valid():
+            # Save the form if valid
+            form.save()
+            messages.success(request, 'Dish updated successfully!')
+            return redirect('seller_dishes')  # Replace with the correct redirect
+
+        else:
+            # Print the validation errors in the console (for debugging)
+            print(form.errors)
+            messages.error(request, 'There were errors in the form, please correct them.')
+    
+    else:
+        # Create the form with the current dish instance for editing
+        form = DishForm(instance=dish)
+
+    # Render the template with the dish and form
+    return render(request, 'edit_dish.html', {'form': form, 'dish': dish})
+
+def coupons_list(request):
+    seller = get_object_or_404(Seller , user=request.user)
+    coupons = Coupon.objects.filter(seller=seller)
+    return render(request, 'coupons_list.html', {'coupons':coupons})
+
+@login_required
+def create_coupon(request):
+    if request.method == 'POST':
+        form = CouponForm(request.POST)
+        if form.is_valid():
+            coupon = form.save(commit=False)
+            # Fetch the seller instance associated with the logged-in user
+            seller = get_object_or_404(Seller, user=request.user)
+            coupon.seller = seller  # Assign the seller instance to the coupon
+            coupon.save()
+            return redirect('seller_coupons')
+    else:
+        form = CouponForm()
+    return render(request, 'create_coupon.html', {'form': form})
+
+def edit_coupon(request, coupon_id):
+    # Retrieve the seller associated with the logged-in user
+    seller = get_object_or_404(Seller, email=request.user.email)
+    
+    # Now, query the Coupon using the Seller instance
+    coupon = get_object_or_404(Coupon, id=coupon_id, seller=seller)
+
+    if request.method == 'POST':
+        form = CouponForm(request.POST, instance=coupon)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Dish details updated successfully.')
-            return redirect('seller_dishes')  # Redirect back to the dishes list
+            return redirect('seller_coupons')
     else:
-        form = DishForm(instance=dish)
-    
-    context = {
-        'form': form,
-        'dish': dish
-    }
-    return render(request, 'edit_dish.html', context)
+        form = CouponForm(instance=coupon)
+
+    return render(request, 'edit_coupon.html', {'form': form})
+
+# Delete Coupon
+def delete_coupon(request, coupon_id):
+    seller = get_object_or_404(Seller, email=request.user.email)
+    coupon = get_object_or_404(Coupon, id=coupon_id, seller=seller)
+    coupon.delete()
+    return redirect('seller_coupons')
+
+@login_required
+def toggle_coupon_availability(request, coupon_id):
+    # Get the seller instance associated with the logged-in user
+    seller = get_object_or_404(Seller, user=request.user)
+
+    # Query the coupon based on the seller instance
+    coupon = get_object_or_404(Coupon, id=coupon_id, seller=seller)
+
+    # Toggle the availability of the coupon
+    coupon.is_available = not coupon.is_available
+    coupon.save()
+
+    return redirect('seller_coupons')

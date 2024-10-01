@@ -24,6 +24,7 @@ urlpatterns = [
     path('',include('gouterapp.urls')),
     path('seller/', include('sellerapp.urls')),
     path('adminpanel/',include('adminapp.urls')),
+    path('accounts/', include('allauth.urls'))
 ]
 
 if settings.DEBUG:

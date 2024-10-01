@@ -86,25 +86,62 @@ def logout(request):
     auth_logout(request)
     return redirect('home')
 
+# def verify_otp(request):
+#     if request.method == 'POST':
+#         form = OTPForm(request.POST)
+#         if form.is_valid():
+#             otp = form.cleaned_data.get('otp').strip()
+#             user_id = request.session.get('user_id')
+#             if not user_id:
+#                 form.add_error(None, "Session expired. please try signup again")
+#                 return render(request, 'verify_otp.html', {'form': form})
+#             try:
+#                 profile = Profile.objects.get(user_id=user_id, otp=otp)
+#                 if profile and profile.otp_created_at >= timezone.now() - timedelta(minutes=5):
+#                     profile.user.is_active = True
+#                     profile.user.save()
+#                     profile.is_verified = True
+#                     profile.save()
+#                     login(request, profile.user)
+#                     messages.success(request, 'Account created successfully!')
+#                     return redirect('home')
+#                 else:
+#                     form.add_error(None, "Invalid or expired OTP.")
+#             except Profile.DoesNotExist:
+#                 form.add_error(None, "Invalid OTP.")
+#     else:
+#         form = OTPForm()
+
+#     return render(request, 'verify_otp.html', {'form': form})
+
+
 def verify_otp(request):
     if request.method == 'POST':
         form = OTPForm(request.POST)
         if form.is_valid():
             otp = form.cleaned_data.get('otp').strip()
             user_id = request.session.get('user_id')
+
             if not user_id:
-                form.add_error(None, "Session expired. please try signup again")
+                form.add_error(None, "Session expired. Please try signup again.")
                 return render(request, 'verify_otp.html', {'form': form})
+
             try:
                 profile = Profile.objects.get(user_id=user_id, otp=otp)
+
                 if profile and profile.otp_created_at >= timezone.now() - timedelta(minutes=5):
+                    # Activate the user's account
                     profile.user.is_active = True
                     profile.user.save()
                     profile.is_verified = True
                     profile.save()
-                    login(request, profile.user)
+
+                    # Log the user in with the allauth backend
+                    login(request, profile.user, backend='allauth.account.auth_backends.AuthenticationBackend')
+
                     messages.success(request, 'Account created successfully!')
                     return redirect('home')
+
                 else:
                     form.add_error(None, "Invalid or expired OTP.")
             except Profile.DoesNotExist:

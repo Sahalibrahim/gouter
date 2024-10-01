@@ -11,8 +11,13 @@ urlpatterns = [
     path('seller_logout/', views.seller_logout, name='seller_logout'),
     path('add-dish/',views.add_dish, name='add_dish'),
     path('seller-dishes/', views.seller_dishes, name='seller_dishes'),
-    path('edit-dish/<int:id>/', views.edit_dish, name='edit_dish'),
+    path('edit-dish/<int:dish_id>/', views.edit_dish, name='edit_dish'),
     path('toggle-availability/<int:id>/', views.toggle_availability, name='toggle_availability'),
+    path('seller/coupons/', views.coupons_list, name='seller_coupons'),
+    path('seller/coupons/create/', views.create_coupon, name='create_coupon'),
+    path('seller/coupons/edit/<int:coupon_id>/', views.edit_coupon, name='edit_coupon'),
+    path('seller/coupons/delete/<int:coupon_id>/', views.delete_coupon, name='delete_coupon'),
+    path('seller/coupons/toggle/<int:coupon_id>/', views.toggle_coupon_availability, name='toggle_coupon_availability'),
 
 ]
 
