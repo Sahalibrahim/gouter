@@ -227,3 +227,5 @@ def view_dishes(request, seller_id):
         'MEDIA_URL': settings.MEDIA_URL,
     }
     return render(request, 'view_dishes.html', context)
+
+
