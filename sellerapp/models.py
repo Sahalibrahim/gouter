@@ -105,3 +105,24 @@ class Coupon(models.Model):
 
     def __str__(self):
         return self.code
+    
+class Booking(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)  # User making the booking
+    seller = models.ForeignKey(Seller, on_delete=models.CASCADE)  # Seller (restaurant) being booked
+    dish = models.ForeignKey(Dish, on_delete=models.SET_NULL, null=True, blank=True)  # Dish being booked (optional)
+    time_slot = models.CharField(max_length=50)  # Time slot for the booking
+    date = models.DateField()  # Booking date
+    table_number = models.IntegerField()  # Table number assigned to the booking
+    method = models.CharField(max_length=20, choices=[
+        ('Dine-In', 'Dine-In'),
+        ('Take-out', 'Take-out'),
+    ] , default='Dine-In') 
+    status = models.CharField(max_length=50, choices=[
+        ('Pending', 'Pending'),
+        ('Confirmed', 'Confirmed'),
+        ('Cancelled', 'Cancelled'),
+    ], default='Pending')  # Booking status
+    created_at = models.DateTimeField(auto_now_add=True)  # Timestamp when booking is created
+
+    def __str__(self):
+        return f"Booking {self.id} for {self.user.username} at {self.seller.restaurant_name} on {self.date} at {self.time_slot}"

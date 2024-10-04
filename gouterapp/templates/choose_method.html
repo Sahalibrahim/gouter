@@ -1,0 +1,221 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Method</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: white;
+            color: black;
+            text-align: center;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        h1 {
+            margin-bottom: 50px;
+            font-size: 2.5em;
+        }
+        .button-group {
+            display: flex;
+            gap: 30px;
+        }
+        .button {
+            background-color: #FFA500;
+            color: black;
+            border: none;
+            padding: 20px 50px;
+            font-size: 1.5em;
+            border-radius: 10px;
+            text-decoration: none; /* To remove underline from link */
+            transition: background-color 0.3s ease;
+            display: inline-block; /* To make the link behave like a button */
+        }
+        .button:hover {
+            background-color: #E69500;
+        }
+        .newsletter {
+            position: absolute;
+            bottom: 50px;
+        }
+        .newsletter input[type="email"] {
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            width: 300px;
+            margin-right: 10px;
+        }
+        .newsletter button {
+            background-color: #32CD32;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Please choose your method for seller ID: {{ seller_id }}</h1>
+
+        <h1>Please choose your method</h1>
+        <div class="button-group">
+            <a class="button" href="{% url 'time_slot' seller_id=seller_id %}?method=dine-in">Choose Dine-In</a>
+            <a class="button" href="{% url 'time_slot' seller_id=seller_id %}?method=take-out">Take-out</a>
+        </div>
+    </div>
+
+</body>
+</html> -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Method</title>
+    <style>
+        body {
+            overflow-y:hidden;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-image: url("{% static 'gouterapp/images/choose_method.jpg' %}"); /* Add your background image URL here */
+            background-size: cover; /* Makes the background cover the entire page */
+            background-position: center; /* Centers the background image */
+            background-repeat: no-repeat; /* Prevents the background from repeating */
+            color: white;
+            text-align: center;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: transparent; /* Add a white overlay with some transparency */
+            padding: 20px;
+            border-radius: 10px;
+            margin-left: 90vh;
+        }
+
+        h1 {
+            margin-bottom: 50px;
+            font-size: 2.5em;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 30px;
+        }
+
+        .button {
+            background-color: #FFA500;
+            color: black;
+            border: none;
+            padding: 20px 50px;
+            font-size: 1.5em;
+            border-radius: 10px;
+            text-decoration: none; /* To remove underline from link */
+            transition: background-color 0.3s ease;
+            display: inline-block; /* To make the link behave like a button */
+            position: relative; /* Required for tooltip positioning */
+        }
+
+        .button:hover {
+            background-color: #E69500;
+        }
+
+        /* Tooltip container */
+        .button .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background-color: black;
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+            padding: 5px 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%; /* Position above the button */
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        /* Tooltip arrow */
+        .button .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%; /* At the bottom of the tooltip */
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: black transparent transparent transparent;
+        }
+
+        /* Show the tooltip when hovering */
+        .button:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .newsletter {
+            position: absolute;
+            bottom: 50px;
+        }
+
+        .newsletter input[type="email"] {
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            width: 300px;
+            margin-right: 10px;
+        }
+
+        .newsletter button {
+            background-color: #32CD32;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+
+    <div class="container">
+        <!-- <img src="{% static 'gouterapp/images/choose_method.jpg' %}"> -->
+        <h1>Please choose your method </h1>
+
+        <div class="button-group">
+            <a class="button" href="{% url 'time_slot' seller_id=seller_id %}?method=Dine-in">
+                Dine-In
+                <span class="tooltip-text">Dine-In: Eat at the restaurant.</span>
+            </a>
+            <a class="button" href="{% url 'time_slot' seller_id=seller_id %}?method=Take-out">
+                Take-out
+                <span class="tooltip-text">Take-out: Pick up your order and go.</span>
+            </a>
+        </div>
+    </div>
+
+</body>
+</html>
+
+
