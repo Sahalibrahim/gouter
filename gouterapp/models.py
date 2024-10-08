@@ -50,3 +50,15 @@ class OrderItem(models.Model):
     def __str__(self):
         return f"{self.dish.name} in Order {self.order.order_id}"
 
+# class Timeslot(models.Model):
+#     start_time = models.TimeField()
+#     end_time = models.TimeField()
+#     seller = models.ForeignKey(Seller, on_delete=models.CASCADE)
+#     max_capacity = models.IntegerField()
+#     bookings_count = models.IntegerField(default=0)
+
+#     def is_available(self):
+#         return self.bookings_count < self.max_capacity
+    
+#     def __str__(self):
+#         return f"{self.start_time.strftime('%I:%M %p')} - {self.end_time.strftime('%I:%M %p')} ({'Available' if self.is_available() else 'Full'})"

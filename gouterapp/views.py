@@ -3,19 +3,20 @@ from django.views import View
 from django.shortcuts import render,redirect,HttpResponse
 from django.contrib.auth import login,authenticate,logout as auth_logout
 from .forms import SignUpForm,LoginForm,OTPForm
-from .models import Profile,Cart
+from .models import Profile,Cart,Order,OrderItem
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.utils import timezone
-from datetime import timedelta
-from sellerapp.models import Seller,Dish
+from datetime import timedelta,datetime
+from sellerapp.models import Seller,Dish,TimeSlot
 from django.conf import settings
 from django.shortcuts import render, get_object_or_404
 from decimal import Decimal
 from django.http import JsonResponse
 import ast
+from django.http import Http404 
 
 # Create your views here.
 def welcome(request):
@@ -235,3 +236,139 @@ def remove_from_cart(request,cart_id):
     cart_item = get_object_or_404(Cart, cart_id=cart_id,user_id = request.user.id)
     cart_item.delete()
     return redirect('view_cart')
+
+
+def generate_time_slots(start_time, end_time, interval_minutes=30):
+    current_time = start_time
+    time_slots = []
+    
+    while current_time < end_time:
+        next_time = (datetime.combine(datetime.today(), current_time) + timedelta(minutes=interval_minutes)).time()
+        time_slots.append((current_time, next_time))
+        current_time = next_time
+    
+    return time_slots
+
+
+
+def choose_method(request):
+    cart_items = Cart.objects.filter(user_id=request.user.id)
+    if not cart_items.exists():
+        return redirect('view_dishes')
+
+    seller_id = cart_items.first().dish.restaurant.id
+    seller = get_object_or_404(Seller, id=seller_id)
+
+    # Assuming seller's operating hours are defined, e.g., from 9 AM to 10 PM
+    seller_start_time = datetime.strptime("09:00", "%H:%M").time()
+    seller_end_time = datetime.strptime("22:00", "%H:%M").time()
+
+    # Generate time slots based on seller's hours
+    time_slot_ranges = generate_time_slots(seller_start_time, seller_end_time)
+
+    # Check availability
+    available_slots = []
+    for start, end in time_slot_ranges:
+        # Check if this slot is already booked
+        is_booked = TimeSlot.objects.filter(seller=seller, start_time=start).exists()
+        available_slots.append({
+            'start_time': start,
+            'end_time': end,
+            'is_available': not is_booked  # Assume if exists, it's booked
+        })
+
+        # Ensure you create TimeSlot instances based on the generated slots
+        TimeSlot.objects.get_or_create(
+            seller=seller,
+            start_time=start,
+            defaults={
+                'end_time': end,
+                'bookings_count': 0 , # Set to the initial booking count
+                'max_capacity': seller.table_number,
+            }
+        )
+
+    return render(request, 'choose_method.html', {'time_slots': available_slots})
+
+
+
+def submit_order(request):
+    if request.method == 'POST':
+        selected_method = request.POST.get('method')
+        selected_time = request.POST.get('time_slot')
+
+        # Convert selected_time from "10:00 AM" format to a time object
+        try:
+            formatted_time = datetime.strptime(selected_time, "%I:%M %p").time()
+        except ValueError:
+            # Handle the case where the time format is incorrect
+            messages.error(request, "Invalid time format.")
+            return redirect('choose_method')
+
+        # Fetch seller ID from user's cart and calculate total amount
+        cart_items = Cart.objects.filter(user_id=request.user.id)
+        if not cart_items.exists():
+            messages.error(request, "Your cart is empty.")
+            return redirect('view_dishes')
+        
+        seller_id = cart_items.first().dish.restaurant.id
+        seller = get_object_or_404(Seller, id=seller_id)
+        total_amount = sum(item.dish.price * item.quantity for item in cart_items)
+
+        # Find the corresponding time slot
+        datetime_now = datetime.combine(datetime.today(), formatted_time)
+        print(f"Formatted time: {formatted_time}, Seller ID: {seller.id}")
+
+        # Try to get the time slot; adjust the query as needed
+        try:
+            time_slot = get_object_or_404(TimeSlot, start_time=formatted_time, seller=seller)
+        except Http404:
+            messages.error(request, "No TimeSlot matches the given query.")
+            return redirect('choose_method')
+
+        # Check if the time slot is available
+        if time_slot.bookings_count < seller.table_number:
+            # Update TimeSlot booking count
+            time_slot.bookings_count += 1
+            time_slot.save()
+
+            # Create Order
+            order = Order.objects.create(
+                seller=seller,
+                user=request.user,
+                total_amount=total_amount,
+                method=selected_method,
+                time_slot=f"{time_slot.start_time} - {time_slot.end_time}",
+                payment_status="Pending"
+            )
+
+            # Create OrderItems for each cart item
+            for item in cart_items:
+                OrderItem.objects.create(
+                    order=order,
+                    seller=seller,
+                    user=request.user,
+                    dish=item.dish,
+                    # quantity=item.quantity  # Make sure to include quantity if needed
+                )
+
+            # Clear the cart after order
+            cart_items.delete()
+            return redirect('order_success', order_id=order.order_id)
+        else:
+            messages.error(request, "The selected time slot is no longer available.")
+            return redirect('choose_method')
+
+
+
+        
+def order_success(request, order_id):
+    order = get_object_or_404(Order, order_id=order_id)
+    context = {
+        'restaurant_name': order.seller.restaurant_name,
+        'order_id': order.order_id,
+        'time_slot': order.time_slot,
+        'method': order.method,
+        'total_amount': order.total_amount,
+    }
+    return render(request, 'ticket.html', context)

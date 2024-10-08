@@ -18,7 +18,11 @@ urlpatterns = [
     path('cart/increment/<int:cart_id>',views.increment_quantity, name='increment_quantity'),
     path('cart/decrement/<int:cart_id>',views.decrement_quantity,name='decrement_quantity'),
     path('cart/remove/<int:cart_id>',views.remove_from_cart,name='remove_from_cart'),
+    path('choose-method/', views.choose_method, name='choose_method'),  # URL for selecting booking method and time slot
+    path('submit-order/', views.submit_order, name='submit_order'),  # URL for submitting the order after selecting method and time slot
+    path('order/success/<int:order_id>', views.order_success, name='order_success'),  # URL to redirect to after successful order (you can implement `order_success` view for a success message)
 ]
+
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

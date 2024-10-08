@@ -1,10 +1,10 @@
 from django.shortcuts import render,redirect,get_object_or_404
 from django.contrib import messages
-from .forms import SellerSignUpForm,SellerLoginForm,SellerProfileForm,DishForm,CouponForm
+from .forms import SellerSignUpForm,SellerLoginForm,SellerProfileForm,DishForm,CouponForm,TimeSlotForm
 from django.contrib.auth.models import User
 from django.contrib.auth import login,authenticate,logout
 from django.contrib.auth.decorators import login_required
-from .models import Seller,Dish,Coupon
+from .models import Seller,Dish,Coupon,TimeSlot
 import os
 
 def seller_signup(request):
@@ -200,3 +200,22 @@ def toggle_coupon_availability(request, coupon_id):
     coupon.save()
 
     return redirect('seller_coupons')
+
+@login_required
+def create_time_slot(request):
+    seller = get_object_or_404(Seller, user=request.user)
+
+    if request.method == 'POST':
+        form = TimeSlotForm(request.POST)
+        if form.is_valid():
+            time_slot = form.save(commit=False)
+            time_slot.seller = seller  # Associate the time slot with the seller
+            time_slot.max_capacity = seller.table_number
+            time_slot.save()
+            messages.success(request, 'Time slot added successfully.')
+            return redirect('seller_dashboard')  # Redirect to the seller dashboard or appropriate page
+    else:
+        form = TimeSlotForm()
+
+    return render(request, 'create_time_slot.html', {'form': form})
+

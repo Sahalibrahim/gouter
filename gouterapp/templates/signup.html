@@ -30,7 +30,7 @@
         <div class="row justify-content-center p-5">
             <div class="signup-div col-md-4 shadow-lg p-3 mb-5 bg-body-tertiary rounded bg-dark-subtle mt-5">
                 <h2>Signup</h2>
-                {% if messages %}
+                <!-- {% if messages %}
                 <div class="messages">
                     {% for message in messages %}
                         <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
@@ -38,7 +38,7 @@
                         </div>
                     {% endfor %}
                 </div>
-                {% endif %}
+                {% endif %} -->
 
                 <form method="post">
                     {% csrf_token %}

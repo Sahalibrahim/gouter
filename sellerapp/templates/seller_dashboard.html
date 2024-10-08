@@ -146,6 +146,7 @@
         <!-- Display the restaurant name dynamically -->
         <h1>Welcome to {{ restaurant_name }}</h1>
         <p>Manage your restaurant's dishes, orders, products, and tables from this dashboard.</p>
+        <button class="btn btn-primary btn-create-time-slot" onclick="location.href='{% url 'create_time_slot' %}'">Create Time Slot</button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"

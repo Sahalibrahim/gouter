@@ -1,161 +1,172 @@
+<!-- templates/choose_method.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Choose Method and Time Slot</title>
+</head>
+<body>
+    <h1>Select Booking Method and Time Slot</h1>
+    
+    <form method="POST" action="{% url 'submit_order' %}">
+        {% csrf_token %}
+        <label for="method">Select Method:</label>
+        <select name="method" id="method" required>
+            <option value="Dine-In">Dine-In</option>
+            <option value="Take-Out">Take-Out</option>
+        </select>
+    
+        <label for="time_slot">Select Time Slot:</label>
+        <select name="time_slot" id="time_slot" required>
+            {% for slot in time_slots %}
+                <option value="{{ slot.start_time|time:"g:i A" }}">{{ slot.start_time|time:"g:i A" }}</option>
+            {% endfor %}
+        </select>
+    
+        <button type="submit">Submit</button>
+    </form>
+    
+</body>
+</html> -->
 {% load static %}
-{% load custom_filters %}
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Select Method</title>
+    <title>Choose Method and Time Slot</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            overflow-y: hidden;
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            background-image: url("{% static 'gouterapp/images/choose_method.jpg' %}");
-            /* Add your background image URL here */
+            background-image: url({% static 'gouterapp/images/choose_method.jpg' %});
+            /* Update this with your background image path */
             background-size: cover;
-            /* Makes the background cover the entire page */
             background-position: center;
-            /* Centers the background image */
-            background-repeat: no-repeat;
-            /* Prevents the background from repeating */
-            color: white;
-            text-align: center;
-        }
-
-        .container {
+            height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            background-color: transparent;
-            /* Add a white overlay with some transparency */
-            padding: 20px;
-            border-radius: 10px;
-            margin-left: 90vh;
+            color: #fff;
         }
 
         h1 {
-            margin-bottom: 50px;
-            font-size: 2.5em;
+            margin-bottom: 30px;
+            animation: fadeIn 1s ease-in;
         }
 
-        .button-group {
-            display: flex;
-            gap: 30px;
-        }
-
-        .button {
-            background-color: #FFA500;
-            color: black;
-            border: none;
-            padding: 20px 50px;
-            font-size: 1.5em;
+        .form-container {
+            background: rgba(0, 0, 0, 0.7);
+            /* Semi-transparent background */
+            padding: 20px;
             border-radius: 10px;
-            text-decoration: none;
-            /* To remove underline from link */
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            animation: slideIn 1s ease-in-out;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        select {
+            margin-bottom: 20px;
+        }
+
+        button {
             transition: background-color 0.3s ease;
-            display: inline-block;
-            /* To make the link behave like a button */
-            position: relative;
-            /* Required for tooltip positioning */
         }
 
-        .button:hover {
-            background-color: #E69500;
+        button:hover {
+            background-color: #ffcc00;
+            color: #000;
         }
 
-        /* Tooltip container */
-        .button .tooltip-text {
-            visibility: hidden;
-            width: 200px;
-            background-color: black;
-            color: #fff;
-            text-align: center;
-            border-radius: 5px;
-            padding: 5px 10px;
-            position: absolute;
-            z-index: 1;
-            bottom: 125%;
-            /* Position above the button */
-            left: 50%;
-            transform: translateX(-50%);
-            opacity: 0;
-            transition: opacity 0.3s;
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
-        /* Tooltip arrow */
-        .button .tooltip-text::after {
-            content: "";
-            position: absolute;
-            top: 100%;
-            /* At the bottom of the tooltip */
-            left: 50%;
-            margin-left: -5px;
-            border-width: 5px;
-            border-style: solid;
-            border-color: black transparent transparent transparent;
-        }
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
 
-        /* Show the tooltip when hovering */
-        .button:hover .tooltip-text {
-            visibility: visible;
-            opacity: 1;
-        }
-
-        .newsletter {
-            position: absolute;
-            bottom: 50px;
-        }
-
-        .newsletter input[type="email"] {
-            padding: 10px;
-            border-radius: 5px;
-            border: none;
-            width: 300px;
-            margin-right: 10px;
-        }
-
-        .newsletter button {
-            background-color: #32CD32;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-            border-radius: 5px;
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
     </style>
 </head>
 
 <body>
+    <div class="form-container">
+        <h1>Select Booking Method and Time Slot</h1>
 
+        <!-- <form method="POST" action="{% url 'submit_order' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="method">Select Method:</label>
+                <select name="method" id="method" class="form-control" required>
+                    <option value="Dine-In">Dine-In</option>
+                    <option value="Take-Out">Take-Out</option>
+                </select>
+            </div>
 
-    <div class="container">
-        <!-- <img src="{% static 'gouterapp/images/choose_method.jpg' %}"> -->
-        <h1>Please choose your method </h1>
-        <h2>Selected Dishes</h2>
-        <ul>
-            {% for dish in dishes %}
-                <li>{{ dish.0 }} - ${{ dish.1 }}</li> 
-            {% endfor %}
-        </ul>
+            <div class="form-group">
+                <label for="time_slot">Select Time Slot:</label>
+                <select name="time_slot" id="time_slot" class="form-control" required>
+                    {% for slot in time_slots %}
+                    <option value="{{ slot.start_time|time:" g:i A" }}">{{ slot.start_time|time:"g:i A" }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-
-        <div class="button-group">
-            <a class="button" href="{% url 'time_slot' seller_id=seller_id %}?method=Dine-in&dishes={{ dishes|join:',' }}">
-                Dine-In
-                <span class="tooltip-text">Dine-In: Eat at the restaurant.</span>
-            </a>
-            <a class="button" href="{% url 'time_slot' seller_id=seller_id %}?method=Take-out&dishes={{ dishes|join:',' }}">
-                Take-out
-                <span class="tooltip-text">Take-out: Pick up your order and go.</span>
-            </a>
-        </div>
+            <button type="submit" class="btn btn-primary btn-block">Submit</button>
+        </form> -->
+        <form method="POST" action="{% url 'submit_order' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="method">Select Method:</label>
+                <select name="method" id="method" class="form-control" required>
+                    <option value="Dine-In">Dine-In</option>
+                    <option value="Take-Out">Take-Out</option>
+                </select>
+            </div>
+        
+            <div class="form-group">
+                <label for="time_slot">Select Time Slot:</label>
+                <select name="time_slot" id="time_slot" class="form-control" required>
+                    {% for slot in time_slots %}
+                        <option value="{{ slot.start_time|time:"g:i A" }}">{{ slot.start_time|time:"g:i A" }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        
+            <button type="submit" class="btn btn-primary btn-block">Submit</button>
+        </form>
+        
+        <footer class="text-center py-4 mt-5" style="background-color: black; color: white; height: 20vh;">
+            <p class="mb-0" style="font-size: 0.9rem;">&copy; 2024 Gouter. All Rights Reserved.</p>
+            <p class="mb-0" style="font-size: 0.8rem;">Follow us on social media:
+                <a href="#" style="color: white;">Facebook</a> |
+                <a href="#" style="color: white;">Twitter</a> |
+                <a href="#" style="color: white;">Instagram</a>
+            </p>
+        </footer>
     </div>
 
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 
 </html>

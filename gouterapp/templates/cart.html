@@ -63,7 +63,7 @@
 
         <div class="mt-4 text-right">
             <p class="total-price">Total Price: Rs {{ total_price }}/-</p>
-            <a href="#" class="btn btn-success">Proceed to Method</a>
+            <a href="{% url 'choose_method' %}" class="btn btn-success">Proceed to Method</a>
         </div>
         {% else %}
         <p>Your cart is empty.</p>

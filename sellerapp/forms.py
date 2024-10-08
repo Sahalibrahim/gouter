@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
-from .models import Seller,Dish,Coupon
+from .models import Seller,Dish,Coupon,TimeSlot
 
 class SellerSignUpForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput, label="Password")
@@ -71,4 +71,7 @@ class CouponForm(forms.ModelForm):
         model = Coupon 
         fields = ['code','discount', 'expiry_date', 'is_available']
 
-        
+class TimeSlotForm(forms.ModelForm):
+    class Meta:
+        model = TimeSlot
+        fields = ['start_time', 'end_time']       
