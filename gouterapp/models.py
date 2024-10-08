@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.conf import settings
+from sellerapp.models import Dish,Seller
 
 
 class Profile(models.Model):
@@ -17,13 +19,34 @@ class Profile(models.Model):
         return f'{self.user.username} Profile'
 
 
-# @receiver(post_save, sender=User)
-# def create_user_profile(sender, instance, created, **kwargs):
-#     if created:
-#         Profile.objects.create(user=instance)
+class Cart(models.Model):
+    cart_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    dish = models.ForeignKey(Dish, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f"Cart {self.cart_id} - User {self.user} - Dish {self.dish.name}"
+    
+class Order(models.Model):
+    order_id = models.AutoField(primary_key=True)
+    seller = models.ForeignKey(Seller, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    method = models.CharField(max_length=10, choices=[('Dine-In', 'Dine-In'), ('Take-Out', 'Take-Out')])
+    payment_status = models.CharField(max_length=20, default='Pending')  # Options could be 'Pending', 'Completed', etc.
+    time_slot = models.CharField(max_length=50)
 
-# @receiver(post_save, sender=User)
-# def save_user_profile(sender, instance, **kwargs):
-#     instance.profile.save()
+    def __str__(self):
+        return f"Order {self.order_id} by {self.user.username}"
+    
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
+    seller = models.ForeignKey(Seller, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    dish = models.ForeignKey(Dish, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.dish.name} in Order {self.order.order_id}"
 
