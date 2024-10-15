@@ -176,7 +176,7 @@
                 <a class="nav-link" href="{% url 'home' %}">Home <span class="sr-only">(current)</span></a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="#">Orders</a>
+                <a class="nav-link" href="{% url 'view_orders' %}">Orders</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="#">About</a>
@@ -368,6 +368,11 @@
         <li data-filter=".pasta">Pasta</li>
         <li data-filter=".fries">Fries</li>
       </ul> -->
+
+      <form method="get" action="{% url 'home' %}" class="form-inline" style="margin-left: 110vh;">
+        <input type="text" name="q" class="form-control" placeholder="Search for restaurants" value="{{ request.GET.q }}">
+        <button type="submit" class="btn btn-primary ml-2">Search</button>
+      </form>
 
       <div id="restaurant" class="filters-content">
         <div class="row grid">

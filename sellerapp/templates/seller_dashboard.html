@@ -37,6 +37,7 @@
 </body>
 
 </html> -->
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -53,6 +54,24 @@
         crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <style>
+        html,
+        body {
+            height: 100%;
+            /* Ensure the body takes full height */
+            margin: 0;
+            /* Remove default margin */
+        }
+
+        body {
+            background-image: url("{% static 'gouterapp/images/seller_dashboard.jpg' %}");
+            /* Replace with your image path */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: white;
+            /* Text color */
+        }
+
         .navbar {
             height: 15vh;
         }
@@ -114,16 +133,13 @@
                         <a class="nav-link" id="add-dish-link" href="{% url 'add_dish' %}">Add Dish</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" id="order-list-link" href="#">Order List</a>
+                        <a class="nav-link" id="order-list-link" href="{% url 'seller_orders' %}">Order List</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" id="products-link" href="{% url 'seller_dishes' %}">Dishes</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" id="coupon-link" href="{% url 'seller_coupons' %}">Coupons</a>
-                    </li>                    
-                    <li class="nav-item">
-                        <a class="nav-link" id="table-link" href="#">Table</a>
                     </li>
                     <!-- Profile Icon with Dropdown -->
                     <li class="nav-item dropdown">
@@ -146,7 +162,8 @@
         <!-- Display the restaurant name dynamically -->
         <h1>Welcome to {{ restaurant_name }}</h1>
         <p>Manage your restaurant's dishes, orders, products, and tables from this dashboard.</p>
-        <button class="btn btn-primary btn-create-time-slot" onclick="location.href='{% url 'create_time_slot' %}'">Create Time Slot</button>
+        <button class="btn btn-primary btn-create-time-slot"
+            onclick="location.href='{% url 'create_time_slot' %}'">Create Time Slot</button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
@@ -179,6 +196,3 @@
 </body>
 
 </html>
-
-
-

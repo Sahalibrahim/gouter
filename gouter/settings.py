@@ -187,3 +187,4 @@ SITE_ID = 2
 
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
+LOGIN_URL = '/login/'  # Adjust this to your login URL

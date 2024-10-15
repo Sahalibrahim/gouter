@@ -6,6 +6,7 @@ from django.contrib.auth import login,authenticate,logout
 from django.contrib.auth.decorators import login_required
 from .models import Seller,Dish,Coupon,TimeSlot
 import os
+from gouterapp.models import Order,OrderItem
 
 def seller_signup(request):
     if request.method == 'POST':
@@ -218,4 +219,37 @@ def create_time_slot(request):
         form = TimeSlotForm()
 
     return render(request, 'create_time_slot.html', {'form': form})
+
+
+@login_required
+def seller_orders(request):
+    seller = get_object_or_404(Seller, user=request.user)  # Get the seller associated with the logged-in user
+    orders = Order.objects.filter(seller=seller).select_related('user').prefetch_related('items__dish').order_by('-order_id')
+
+    order_data = []
+    for order in orders:
+        items = []
+        for item in order.items.all():
+            items.append({
+                'item_id': item.id,
+                'dish_name': item.dish.name,
+                'price': item.dish.price,
+                'quantity': item.quantity,  # Assuming the quantity field is in OrderItem
+            })
+        order_data.append({
+            'order_id': order.order_id,
+            'user_email': order.user.email,  # Get user email if needed
+            'total_amount': order.total_amount,
+            'method': order.method,
+            'time_slot': order.time_slot,
+            'items': items,
+        })
+
+    context = {
+        'order_data': order_data,
+        'restaurant_name': seller.restaurant_name,  # Optional: Include restaurant name in context
+    }
+
+    return render(request, 'seller_orders.html', context)  # Create a template for displaying seller orders
+
 

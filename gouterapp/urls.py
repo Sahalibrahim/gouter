@@ -21,6 +21,9 @@ urlpatterns = [
     path('choose-method/', views.choose_method, name='choose_method'),  # URL for selecting booking method and time slot
     path('submit-order/', views.submit_order, name='submit_order'),  # URL for submitting the order after selecting method and time slot
     path('order/success/<int:order_id>', views.order_success, name='order_success'),  # URL to redirect to after successful order (you can implement `order_success` view for a success message)
+    path('orders/',views.view_orders, name='view_orders'),
+    path('orders/cancel_dish/<int:item_id>/',views.cancel_dish, name='cancel_dish'),
+    path('orders/cancel_order/<int:order_id>/',views.cancel_order, name='cancel_order'),
 ]
 
 

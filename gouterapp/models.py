@@ -4,6 +4,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.conf import settings
 from sellerapp.models import Dish,Seller
+from django.utils import timezone
 
 
 class Profile(models.Model):
@@ -37,6 +38,7 @@ class Order(models.Model):
     method = models.CharField(max_length=10, choices=[('Dine-In', 'Dine-In'), ('Take-Out', 'Take-Out')])
     payment_status = models.CharField(max_length=20, default='Pending')  # Options could be 'Pending', 'Completed', etc.
     time_slot = models.CharField(max_length=50)
+    created_at = models.DateTimeField(default=timezone.now)  # Adds created_at field
 
     def __str__(self):
         return f"Order {self.order_id} by {self.user.username}"
@@ -46,19 +48,8 @@ class OrderItem(models.Model):
     seller = models.ForeignKey(Seller, on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     dish = models.ForeignKey(Dish, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
 
     def __str__(self):
         return f"{self.dish.name} in Order {self.order.order_id}"
 
-# class Timeslot(models.Model):
-#     start_time = models.TimeField()
-#     end_time = models.TimeField()
-#     seller = models.ForeignKey(Seller, on_delete=models.CASCADE)
-#     max_capacity = models.IntegerField()
-#     bookings_count = models.IntegerField(default=0)
-
-#     def is_available(self):
-#         return self.bookings_count < self.max_capacity
-    
-#     def __str__(self):
-#         return f"{self.start_time.strftime('%I:%M %p')} - {self.end_time.strftime('%I:%M %p')} ({'Available' if self.is_available() else 'Full'})"

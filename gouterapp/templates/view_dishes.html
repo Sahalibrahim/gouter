@@ -16,11 +16,17 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
   <style>
     body {
-      background-color: #f8f9fa;
+      background-image: url({% static 'gouterapp/images/choose_method.jpg' %});
+      background-size : cover;
+      background-position : center;
+    }
+
+    .container{
+      background-color: transparent;
     }
 
     .hero-section {
-      background-color: black;
+      background-color:transparent;
       color: white;
       /* padding: 5rem 0; */
       height: 40vh;
@@ -61,6 +67,10 @@
 
     .btn-back {
       animation: fadeIn 1s ease-in-out;
+    }
+    .cat_div{
+      color: white;
+      padding-bottom: 2vh;
     }
 
     @keyframes fadeIn {
@@ -185,19 +195,22 @@
               </a>
               {% endif %}
             </div>
+            
           </div>
         </nav>
+        
       </div>
     </header>
     <h1 class="animate__animated animate__fadeIn">Welcome to {{ seller.restaurant_name }}</h1>
     <p class="lead animate__animated animate__fadeIn">Discover our delicious dishes made with love!</p>
     <a href="{% url 'home' %}" class="btn btn-primary btn-back">Back to Home</a>
+    
   </div>
 
 
-  <div class="container mt-5 bg-light p-4" style="border-radius: 8px;">
+  <div class="container" style="border-radius: 8px;">
 
-    <div class="category-filter mb-4 p-3 bg-light animate__animated animate__fadeInUp">
+    <div class="cat_div category-filter animate__animated animate__fadeInUp">
       <form method="GET" action="">
         <label for="category" class="form-label">Select Category:</label>
         <select id="category" name="category" class="form-select" onchange="this.form.submit()">
@@ -207,6 +220,12 @@
             {{ category }}
           </option>
           {% endfor %}
+        </select>
+        <label for="sort" class="form-label mt-2">Sort by Price:</label>
+        <select id="sort" name="sort" class="form-select" onchange="this.form.submit()">
+          <option value="Default" {% if sort_order == 'default' %}selected{% endif %}>Default</option>
+          <option value="low_to_high" {% if sort_order == 'low_to_high' %}selected{% endif %}>Low to High</option>
+          <option value="high_to_low" {% if sort_order == 'high_to_low' %}selected{% endif %}>High to Low</option>
         </select>
       </form>
     </div>
@@ -235,14 +254,14 @@
       {% endfor %}
     </div>
   </div>
-  <footer class="text-center py-4 mt-5" style="background-color: black; color: white; height: 20vh;">
+  <!-- <footer class="text-center py-4 mt-5" style="background-color: black; color: white; height: 20vh;">
     <p class="mb-0" style="font-size: 0.9rem;">&copy; 2024 Gouter. All Rights Reserved.</p>
     <p class="mb-0" style="font-size: 0.8rem;">Follow us on social media:
       <a href="#" style="color: white;">Facebook</a> |
       <a href="#" style="color: white;">Twitter</a> |
       <a href="#" style="color: white;">Instagram</a>
     </p>
-  </footer>
+  </footer> -->
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
