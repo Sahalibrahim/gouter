@@ -11,6 +11,7 @@ from django.core.mail import send_mail
 from django.utils import timezone
 from datetime import timedelta,datetime
 from sellerapp.models import Seller,Dish,TimeSlot
+from adminapp.models import Category
 from django.conf import settings
 from django.shortcuts import render, get_object_or_404
 from decimal import Decimal
@@ -20,6 +21,8 @@ from django.http import Http404
 from django.urls import reverse
 from django.db.models import F
 from django.db import transaction
+from django.core.paginator import Paginator
+from django.db.models import Q
 
 # Create your views here.
 def welcome(request):
@@ -168,58 +171,129 @@ def resend_otp(request):
 
 
 
+
 # def view_dishes(request, seller_id):
 #     seller = get_object_or_404(Seller, pk=seller_id)
 #     selected_category = request.GET.get('category', 'All')
+#     sort_order = request.GET.get('sort')  
 
 #     # Filter dishes based on availability and category
 #     if selected_category == 'All':
 #         dishes = Dish.objects.filter(restaurant=seller, is_available=True)
 #     else:
 #         dishes = Dish.objects.filter(restaurant=seller, category=selected_category, is_available=True)
-    
-#     # Get distinct categories from available dishes only
+
+#     # Apply sorting based on price order
+#     if sort_order == 'low_to_high':
+#         dishes = dishes.order_by('price')
+#     elif sort_order == 'high_to_low':
+#         dishes = dishes.order_by('-price')
+
+#     # Get distinct categories from available dishes
 #     categories = Dish.objects.filter(restaurant=seller, is_available=True).values_list('category', flat=True).distinct()
+
 
 #     context = {
 #         'seller': seller,
 #         'dishes': dishes,
 #         'categories': categories,
 #         'selected_category': selected_category,
+#         'sort_order': sort_order,
 #         'MEDIA_URL': settings.MEDIA_URL,
+#     }
+#     return render(request, 'view_dishes.html', context)
+# ---------------------------------------------------------------------------------------------------------------------------------------
+# def view_dishes(request, seller_id):
+#     seller = get_object_or_404(Seller, pk=seller_id)
+#     # Retrieve the seller's dishes
+#     dishes = Dish.objects.filter(restaurant__id=seller_id, is_available=True)
+#     categories = Category.objects.filter(dish__restaurant__id=seller_id).distinct()   # Retrieve all categories for the filter dropdown
+    
+#     # Get the selected category and sort order from the GET parameters
+#     search_query = request.GET.get('search', '')
+#     selected_category = request.GET.get('category', 'All')
+#     sort_order = request.GET.get('sort', 'Default')
+
+#     # Filter dishes based on search query
+#     if search_query:
+#         dishes = dishes.filter(Q(name__icontains=search_query) | Q(description__icontains=search_query))
+
+
+#     # Filter dishes by selected category if a specific category is selected
+#     if selected_category != 'All':
+#         dishes = dishes.filter(category__name=selected_category)  # Filter by selected category
+#     else:
+#         dishes = Dish.objects.filter(restaurant=seller, is_available=True)
+
+#     # Sort dishes based on the selected sort order
+#     if sort_order == 'low_to_high':
+#         dishes = dishes.order_by('price')
+#     elif sort_order == 'high_to_low':
+#         dishes = dishes.order_by('-price')
+
+
+#     paginator = Paginator(dishes,20)
+#     page_number = request.GET.get('page')
+#     page_obj = paginator.get_page(page_number)
+
+#     context = {
+#         'dishes': dishes,
+#         'categories': categories,
+#         'selected_category': selected_category,
+#         'sort_order': sort_order,
+#         'search_query': search_query,
+#         'seller': seller,  # Assuming 'seller' is also passed to this context
+#         'MEDIA_URL': settings.MEDIA_URL,
+#         'page_obj':page_obj
 #     }
 #     return render(request, 'view_dishes.html', context)
 
 
 def view_dishes(request, seller_id):
     seller = get_object_or_404(Seller, pk=seller_id)
+    dishes = Dish.objects.filter(restaurant__id=seller_id, is_available=True)
+    categories = Category.objects.filter(dish__restaurant__id=seller_id).distinct()
+    
+    # Get the search query, selected category, and sort order from GET parameters
+    search_query = request.GET.get('search', '')
     selected_category = request.GET.get('category', 'All')
-    sort_order = request.GET.get('sort')  
+    sort_order = request.GET.get('sort', 'Default')
 
-    # Filter dishes based on availability and category
-    if selected_category == 'All':
-        dishes = Dish.objects.filter(restaurant=seller, is_available=True)
-    else:
-        dishes = Dish.objects.filter(restaurant=seller, category=selected_category, is_available=True)
+    # Filter dishes based on search query
+    if search_query:
+        dishes = dishes.filter(Q(name__icontains=search_query) | Q(description__icontains=search_query))
 
-    # Apply sorting based on price order
+    # Filter dishes by selected category
+    if selected_category != 'All':
+        dishes = dishes.filter(category__name=selected_category)
+
+    # Sort dishes based on the selected sort order
     if sort_order == 'low_to_high':
         dishes = dishes.order_by('price')
     elif sort_order == 'high_to_low':
         dishes = dishes.order_by('-price')
 
-    # Get distinct categories from available dishes
-    categories = Dish.objects.filter(restaurant=seller, is_available=True).values_list('category', flat=True).distinct()
+    paginator = Paginator(dishes, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
-        'seller': seller,
-        'dishes': dishes,
+        'dishes': page_obj,
         'categories': categories,
         'selected_category': selected_category,
         'sort_order': sort_order,
+        'search_query': search_query,
+        'seller': seller,
         'MEDIA_URL': settings.MEDIA_URL,
+        'page_obj':page_obj
     }
     return render(request, 'view_dishes.html', context)
+
+
+
+
+
+
 
 def add_to_cart(request,dish_id):
     dish = get_object_or_404(Dish,id=dish_id)

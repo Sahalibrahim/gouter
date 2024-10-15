@@ -66,6 +66,8 @@ class DishForm(forms.ModelForm):
         fields = ['name', 'description', 'price', 'image', 'category','is_available'] 
 
 
+
+
 class CouponForm(forms.ModelForm):
     class Meta:
         model = Coupon 
@@ -74,4 +76,6 @@ class CouponForm(forms.ModelForm):
 class TimeSlotForm(forms.ModelForm):
     class Meta:
         model = TimeSlot
-        fields = ['start_time', 'end_time']       
+        fields = ['start_time', 'end_time']      
+
+

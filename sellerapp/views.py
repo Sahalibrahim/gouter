@@ -7,6 +7,8 @@ from django.contrib.auth.decorators import login_required
 from .models import Seller,Dish,Coupon,TimeSlot
 import os
 from gouterapp.models import Order,OrderItem
+from django.db.models import Q
+from django.core.paginator import Paginator
 
 def seller_signup(request):
     if request.method == 'POST':
@@ -103,8 +105,17 @@ def add_dish(request):
 @login_required
 def seller_dishes(request):
     seller = request.user.seller
+    query = request.GET.get('query','')
     dishes = Dish.objects.filter(restaurant=seller)
-    return render(request, 'seller_dishes.html', {'dishes': dishes})
+
+    if query:
+        dishes = dishes.filter(Q(name__icontains=query)| Q(description__icontains=query))
+
+    paginator = Paginator(dishes,5)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'seller_dishes.html', {'dishes': dishes,'query':query,'page_obj':page_obj})
 
 def toggle_availability(request, id):
     dish = get_object_or_404(Dish, id=id)

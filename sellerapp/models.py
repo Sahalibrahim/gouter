@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import User
 import os
 from django.db.models import JSONField
+from adminapp.models import Category
+
 
 class Seller(models.Model):
     # restaurant_id = models.AutoField(primary_key=True)
@@ -38,22 +40,25 @@ class Seller(models.Model):
                 os.remove(old_image.path)
 
 
+
+
 class Dish(models.Model):
-    CATEGORY_CHOICES = [
-        ('Shakes', 'Shakes'),
-        ('Juices', 'Juices'),
-        ('Chinese', 'Chinese'),
-        ('Arabic', 'Arabic'),
-        ('Curry', 'Curry'),
-        ('Mandhi', 'Mandhi'),
-        ('Deserts', 'Deserts'),
-    ]
+    # CATEGORY_CHOICES = [
+    #     ('Shakes', 'Shakes'),
+    #     ('Juices', 'Juices'),
+    #     ('Chinese', 'Chinese'),
+    #     ('Arabic', 'Arabic'),
+    #     ('Curry', 'Curry'),
+    #     ('Mandhi', 'Mandhi'),
+    #     ('Deserts', 'Deserts'),
+    # ]
 
     name = models.CharField(max_length=255)  # Increased max_length to 255
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)  # Updated max_digits
     image = models.ImageField(upload_to='dishes/', null=True, blank=True)  # Updated upload path
-    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)  # Category field remains
+    # category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)  # Category field remains
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)  # Updated category field
     restaurant = models.ForeignKey('Seller', on_delete=models.CASCADE)
     is_available = models.BooleanField(default=True)
     updated_at = models.DateTimeField(auto_now=True)  # Timestamp for when the dish is updated
@@ -89,4 +94,3 @@ class TimeSlot(models.Model):
 
     def __str__(self):
         return f"{self.seller.restaurant_name}: {self.start_time} - {self.end_time}"
-

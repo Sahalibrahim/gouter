@@ -1,8 +1,8 @@
 from django.shortcuts import render,get_object_or_404,redirect
 from gouterapp.models import User
 from sellerapp.models import Seller
-from .forms import AdminLoginForm
-from .models import CustomAdmin
+from .forms import AdminLoginForm,CategoryForm
+from .models import CustomAdmin,Category
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import authenticate,login,logout
 from django.views.decorators.cache import cache_control
@@ -108,3 +108,40 @@ def view_sellers(request):
         sellers = Seller.objects.all()
     
     return render(request, 'seller_list.html', {'sellers': sellers})
+
+
+# List all categories
+def category_list(request):
+    categories = Category.objects.all()
+    return render(request, 'category_list.html', {'categories': categories})
+
+# Create a new category
+def category_create(request):
+    if request.method == 'POST':
+        form = CategoryForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('category_list')
+    else:
+        form = CategoryForm()
+    return render(request, 'category_form.html', {'form': form})
+
+# Update an existing category
+def category_update(request, pk):
+    category = get_object_or_404(Category, pk=pk)
+    if request.method == 'POST':
+        form = CategoryForm(request.POST, instance=category)
+        if form.is_valid():
+            form.save()
+            return redirect('category_list')
+    else:
+        form = CategoryForm(instance=category)
+    return render(request, 'category_form.html', {'form': form})
+
+# Delete a category
+def category_delete(request, pk):
+    category = get_object_or_404(Category, pk=pk)
+    if request.method == 'POST':
+        category.delete()
+        return redirect('category_list')
+    return render(request, 'category_confirm_delete.html', {'category': category})
