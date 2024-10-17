@@ -19,6 +19,11 @@ class Seller(models.Model):
     image_url = models.ImageField(upload_to='profile_images/', blank=True, null=True)  # Updated to ImageField
     is_approved = models.BooleanField(default=False)
     table_number = models.IntegerField(blank=True, null=True)
+    TYPE_CHOICES = [
+        ('veg', 'Vegetarian'),
+        ('nonveg', 'Non-Vegetarian'),
+    ]
+    type = models.CharField(max_length=10, choices=TYPE_CHOICES, default='nonveg')  # Default set to 'veg'
 
     def __str__(self):
         return self.restaurant_name

@@ -9,10 +9,12 @@ class SellerSignUpForm(forms.ModelForm):
     owner_name = forms.CharField(max_length=255, label="Owner's Name")
     email = forms.EmailField(label="Email Address")
     address = forms.CharField(widget=forms.Textarea, label="Address")
+    type = forms.ChoiceField(choices=Seller.TYPE_CHOICES, label="Type")  # Add type choice field
+
 
     class Meta:
         model = Seller
-        fields = ['restaurant_name', 'owner_name', 'email', 'address', 'password']
+        fields = ['restaurant_name', 'owner_name', 'email', 'address', 'password','type']
 
     def clean(self):
         cleaned_data = super().clean()

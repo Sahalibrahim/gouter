@@ -28,18 +28,35 @@ from django.db.models import Q
 def welcome(request):
     return render(request,'welcome.html')
 
+
+
 # def home(request):
-#     sellers = Seller.objects.filter(is_approved=True)
+#     query = request.GET.get('q')
+#     if query:
+#         sellers = Seller.objects.filter(is_approved=True, restaurant_name__icontains=query)
+#     else:
+#         sellers = Seller.objects.filter(is_approved=True)
 #     return render(request, 'home.html', {'sellers': sellers, 'MEDIA_URL': settings.MEDIA_URL})
+
 
 def home(request):
     query = request.GET.get('q')
-    if query:
-        sellers = Seller.objects.filter(is_approved=True, restaurant_name__icontains=query)
-    else:
-        sellers = Seller.objects.filter(is_approved=True)
-    return render(request, 'home.html', {'sellers': sellers, 'MEDIA_URL': settings.MEDIA_URL})
+    restaurant_type = request.GET.get('type', 'all')  # Default to 'all'
 
+    # Start with approved sellers
+    sellers = Seller.objects.filter(is_approved=True)
+
+    # Filter by search query if provided
+    if query:
+        sellers = sellers.filter(restaurant_name__icontains=query)
+
+    # Filter by type if a specific type is selected
+    if restaurant_type == 'veg':
+        sellers = sellers.filter(type='veg')
+    elif restaurant_type == 'nonveg':
+        sellers = sellers.filter(type='nonveg')
+
+    return render(request, 'home.html', {'sellers': sellers, 'MEDIA_URL': settings.MEDIA_URL})
 
 def generate_otp():
     return str(random.randint(100000, 999999))
