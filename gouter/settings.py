@@ -188,3 +188,7 @@ SITE_ID = 2
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_URL = '/login/'  # Adjust this to your login URL
+
+RAZORPAY_API_KEY = 'rzp_test_iQQzcualejRK3o'
+RAZORPAY_API_SECRET = 'sXGMA10yOk9qVQmlY6QcV3zq'
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin-allow-popups"

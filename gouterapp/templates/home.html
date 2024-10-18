@@ -495,10 +495,10 @@
         <div id="restaurant" class="filters-content">
           <div class="row grid">
             {% for seller in sellers %}
-            <div class="col-sm-6 col-lg-4 all pizza">
+            <div class="col-sm-6 col-lg-4 all pizza" >
               <div class="box">
                 <div>
-                  <div class="img-box"> 
+                  <div class="img-box" style="background-color: rgb(34, 40, 49);"> 
                     <img 
                       src="{{ MEDIA_URL }}{{ seller.image_url }}"
                       alt="Restaurant Image"
@@ -511,7 +511,7 @@
                       href="{% url 'view_dishes' seller.id %}"
                       class="btn btn-warning"
                     >
-                      View dish
+                      View dishes
                     </a>
                   </div>
                 </div>

@@ -9,6 +9,7 @@ from django.utils import timezone
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    wallet_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     # phone_number = models.CharField(max_length=15, blank=True)  
     # address = models.CharField(max_length=255, blank=True)       
     # profile_picture = models.ImageField(upload_to='profile_pics', blank=True) 
@@ -39,6 +40,7 @@ class Order(models.Model):
     payment_status = models.CharField(max_length=20, default='Pending')  # Options could be 'Pending', 'Completed', etc.
     time_slot = models.CharField(max_length=50)
     created_at = models.DateTimeField(default=timezone.now)  # Adds created_at field
+    razorpay_order_id = models.CharField(max_length=100, blank=True, null=True)  # Field for Razorpay order ID
 
     def __str__(self):
         return f"Order {self.order_id} by {self.user.username}"

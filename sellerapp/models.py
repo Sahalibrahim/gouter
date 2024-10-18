@@ -8,6 +8,7 @@ from adminapp.models import Category
 class Seller(models.Model):
     # restaurant_id = models.AutoField(primary_key=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    wallet_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     restaurant_name = models.CharField(max_length=255)
     address = models.TextField()
     description = models.TextField(blank=True, null=True)

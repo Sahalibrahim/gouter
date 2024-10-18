@@ -24,6 +24,7 @@ urlpatterns = [
     path('orders/',views.view_orders, name='view_orders'),
     path('orders/cancel_dish/<int:item_id>/',views.cancel_dish, name='cancel_dish'),
     path('orders/cancel_order/<int:order_id>/',views.cancel_order, name='cancel_order'),
+    path('payment-callback/<int:order_id>/', views.payment_callback, name='payment_callback'),
 ]
 
 

@@ -23,6 +23,9 @@ from django.db.models import F
 from django.db import transaction
 from django.core.paginator import Paginator
 from django.db.models import Q
+import razorpay
+from django.views.decorators.csrf import csrf_exempt
+import json
 
 # Create your views here.
 def welcome(request):
@@ -423,7 +426,77 @@ def choose_method(request):
 
     return render(request, 'choose_method.html', {'time_slots': available_slots})
 
+# previous submit_order--------------------
+# def submit_order(request):
+#     if request.method == 'POST':
+#         selected_method = request.POST.get('method')
+#         selected_time = request.POST.get('time_slot')
 
+#         # Convert selected_time from "10:00 AM" format to a time object
+#         try:
+#             formatted_time = datetime.strptime(selected_time, "%I:%M %p").time()
+#         except ValueError:
+#             # Handle the case where the time format is incorrect
+#             messages.error(request, "Invalid time format.")
+#             return redirect('choose_method')
+
+#         # Fetch seller ID from user's cart and calculate total amount
+#         cart_items = Cart.objects.filter(user_id=request.user.id)
+#         if not cart_items.exists():
+#             messages.error(request, "Your cart is empty.")
+#             return redirect('view_dishes')
+        
+#         seller_id = cart_items.first().dish.restaurant.id
+#         seller = get_object_or_404(Seller, id=seller_id)
+#         total_amount = sum(item.dish.price * item.quantity for item in cart_items)
+
+#         # Find the corresponding time slot
+#         datetime_now = datetime.combine(datetime.today(), formatted_time)
+#         print(f"Formatted time: {formatted_time}, Seller ID: {seller.id}")
+
+#         # Try to get the time slot; adjust the query as needed
+#         try:
+#             time_slot = get_object_or_404(TimeSlot, start_time=formatted_time, seller=seller)
+#         except Http404:
+#             messages.error(request, "No TimeSlot matches the given query.")
+#             return redirect('choose_method')
+
+#         # Check if the time slot is available
+#         if time_slot.bookings_count < seller.table_number:
+#             # Update TimeSlot booking count
+#             time_slot.bookings_count += 1
+#             time_slot.save()
+
+#             # Create Order
+#             order = Order.objects.create(
+#                 seller=seller,
+#                 user=request.user,
+#                 total_amount=total_amount,
+#                 method=selected_method,
+#                 time_slot=f"{time_slot.start_time} - {time_slot.end_time}",
+#                 payment_status="Pending"
+#             )
+
+#             # Create OrderItems for each cart item
+#             for item in cart_items:
+#                 OrderItem.objects.create(
+#                     order=order,
+#                     seller=seller,
+#                     user=request.user,
+#                     dish=item.dish,
+#                     quantity=item.quantity  # Make sure to include quantity if needed
+#                 )
+
+#             # Clear the cart after order
+#             cart_items.delete()
+#             return redirect('order_success', order_id=order.order_id)
+#         else:
+#             messages.error(request, "The selected time slot is no longer available.")
+#             return redirect('choose_method')
+# --------------------------------------------------------------------------------------------
+
+client = razorpay.Client(auth=(settings.RAZORPAY_API_KEY, settings.RAZORPAY_API_SECRET))
+# client = razorpay.Client(auth=("rzp_test_9sQwBMyG5rCRnH", "jFCY27K0VUKbjks3s2amCnT9"))
 
 def submit_order(request):
     if request.method == 'POST':
@@ -434,7 +507,6 @@ def submit_order(request):
         try:
             formatted_time = datetime.strptime(selected_time, "%I:%M %p").time()
         except ValueError:
-            # Handle the case where the time format is incorrect
             messages.error(request, "Invalid time format.")
             return redirect('choose_method')
 
@@ -442,17 +514,13 @@ def submit_order(request):
         cart_items = Cart.objects.filter(user_id=request.user.id)
         if not cart_items.exists():
             messages.error(request, "Your cart is empty.")
-            return redirect('view_dishes')
-        
+            return redirect('view_dishes',seller_id=seller_id)
+
         seller_id = cart_items.first().dish.restaurant.id
         seller = get_object_or_404(Seller, id=seller_id)
         total_amount = sum(item.dish.price * item.quantity for item in cart_items)
 
         # Find the corresponding time slot
-        datetime_now = datetime.combine(datetime.today(), formatted_time)
-        print(f"Formatted time: {formatted_time}, Seller ID: {seller.id}")
-
-        # Try to get the time slot; adjust the query as needed
         try:
             time_slot = get_object_or_404(TimeSlot, start_time=formatted_time, seller=seller)
         except Http404:
@@ -465,14 +533,22 @@ def submit_order(request):
             time_slot.bookings_count += 1
             time_slot.save()
 
-            # Create Order
+            # Create Razorpay Order
+            razorpay_order = client.order.create({
+                'amount': int(total_amount * 100),  # Amount in paise
+                'currency': 'INR',
+                'payment_capture': '1'
+            })
+
+            # Create Order record
             order = Order.objects.create(
                 seller=seller,
                 user=request.user,
                 total_amount=total_amount,
                 method=selected_method,
                 time_slot=f"{time_slot.start_time} - {time_slot.end_time}",
-                payment_status="Pending"
+                payment_status="Pending",
+                razorpay_order_id=razorpay_order['id']
             )
 
             # Create OrderItems for each cart item
@@ -482,17 +558,76 @@ def submit_order(request):
                     seller=seller,
                     user=request.user,
                     dish=item.dish,
-                    quantity=item.quantity  # Make sure to include quantity if needed
+                    quantity=item.quantity
                 )
 
             # Clear the cart after order
             cart_items.delete()
-            return redirect('order_success', order_id=order.order_id)
+
+            # Prepare context for Razorpay checkout in payment.html
+            context = {
+                'submit_order': {
+                    'key_id': settings.RAZORPAY_API_KEY,
+                    'amount': int(total_amount * 100),  # Amount in paise
+                    'display_amount': total_amount,  # Amount in rupees for display
+                    'restaurant_name': seller.restaurant_name,
+                    'order_id': order.order_id,
+                    'razorpay_order_id': razorpay_order['id'],
+                    'restaurant_logo': seller.image_url,
+                    'method': selected_method,
+                    'time_slot': f"{time_slot.start_time} - {time_slot.end_time}",
+                },
+                'user': request.user,
+                'callback_url': reverse('payment_callback', kwargs={'order_id': order.order_id})
+            }
+
+            return render(request, 'payment.html', context)
         else:
             messages.error(request, "The selected time slot is no longer available.")
             return redirect('choose_method')
 
 
+# ----------------------------------------------------------------------------------------
+
+@csrf_exempt
+def payment_callback(request, order_id):
+    print("1")
+    if request.method == "POST":
+        order = get_object_or_404(Order, order_id=order_id)
+        payment_id = request.POST.get('razorpay_payment_id')
+        razorpay_order_id = request.POST.get('razorpay_order_id')
+        signature = request.POST.get('razorpay_signature')
+        print("2")
+        # Verify the payment
+        params_dict = {
+            'razorpay_order_id': razorpay_order_id,
+            'razorpay_payment_id': payment_id,
+            'razorpay_signature': signature                                             #just added this
+        }
+        print(params_dict)
+        try:
+            client.utility.verify_payment_signature(params_dict)
+            print("bithul")
+            order.payment_status = 'Completed'
+            order.save()
+
+            # Transfer money to seller wallet
+            with transaction.atomic():
+                order.seller.wallet_balance += order.total_amount
+                order.seller.save()
+                print("3")
+            return redirect('order_success', order_id=order_id)
+        except razorpay.errors.SignatureVerificationError:
+            print("4")
+            order.payment_status = 'Failed'
+            order.save()
+            messages.error(request, "Payment failed.")
+            return redirect('view_cart')
+        
+
+
+
+# ---------------------------------------------------------------------------------------
 
         
 def order_success(request, order_id):
@@ -506,7 +641,7 @@ def order_success(request, order_id):
     }
     return render(request, 'ticket.html', context)
 
-# -----------------------------------------------------------------
+
 @login_required
 def view_orders(request):
     orders = Order.objects.filter(user=request.user).select_related('seller').prefetch_related('items__dish').order_by('-order_id')
@@ -536,31 +671,86 @@ def view_orders(request):
 
     return render(request, 'view_order.html', context)
 
+# -----------------------------------------------------------------------------------------------------
 
+# @login_required
+# def cancel_dish(request, item_id):
+#     order_item = get_object_or_404(OrderItem, id=item_id, user=request.user)
+#     order_item.delete()
+#     messages.success(request, 'Dish has been canceled')
+#     return redirect(reverse('view_orders'))
+
+# -----------------------------------------------------------------------------------------------------
 @login_required
 def cancel_dish(request, item_id):
     order_item = get_object_or_404(OrderItem, id=item_id, user=request.user)
+    item_total = order_item.dish.price * order_item.quantity
+
+    # Transfer item amount from seller to user
+    order_item.order.seller.wallet_balance -= item_total
+    request.user.profile.wallet_balance += item_total
+    order_item.order.seller.save()
+    request.user.profile.save()
+
     order_item.delete()
-    messages.success(request, 'Dish has been canceled')
+    messages.success(request, 'Dish has been canceled and amount refunded.')
     return redirect(reverse('view_orders'))
 
+
+# -----------------------------------------------------------------------------------------------------
+
 # @login_required
+# @transaction.atomic
 # def cancel_order(request, order_id):
 #     order = get_object_or_404(Order, order_id=order_id, user=request.user)
+    
+#     # Retrieve the time slot related to this order
+#     time_slot_str = order.time_slot  # e.g., "11:00:00 - 11:30:00"
+#     seller = order.seller
+
+#     # Extract and parse the start time from the time_slot string
+#     if time_slot_str and seller:
+#         try:
+#             start_time_str = time_slot_str.split(" - ")[0]  # Extracts "11:00:00"
+#             start_time = datetime.strptime(start_time_str, "%H:%M:%S").time()  # Converts to time object
+#         except (ValueError, IndexError):
+#             messages.error(request, "Invalid time slot format.")
+#             return redirect(reverse('view_orders'))
+
+#         # Retrieve the specific TimeSlot instance using start_time
+#         time_slot_instance = TimeSlot.objects.filter(
+#             seller=seller,
+#             start_time=start_time
+#         ).first()
+        
+#         if time_slot_instance:
+#             # Decrement the bookings_count if it's greater than 0
+#             if time_slot_instance.bookings_count > 0:
+#                 time_slot_instance.bookings_count -= 1
+#                 time_slot_instance.save()
+
+#     # Delete the order
 #     order.delete()
-#     messages.success(request, 'Entire order has been canceled .')
+#     messages.success(request, 'Entire order has been canceled.')
+
 #     return redirect(reverse('view_orders'))
+# ----------------------------------------------------------------------------------------------
 
 @login_required
 @transaction.atomic
 def cancel_order(request, order_id):
     order = get_object_or_404(Order, order_id=order_id, user=request.user)
-    
-    # Retrieve the time slot related to this order
-    time_slot_str = order.time_slot  # e.g., "11:00:00 - 11:30:00"
+    total_amount = order.total_amount
     seller = order.seller
 
-    # Extract and parse the start time from the time_slot string
+    # Transfer total amount from seller's wallet balance to user's profile
+    seller.wallet_balance -= total_amount
+    request.user.profile.wallet_balance += total_amount
+    seller.save()
+    request.user.profile.save()
+
+    # Retrieve and update the bookings count for the time slot
+    time_slot_str = order.time_slot  # e.g., "11:00:00 - 11:30:00"
     if time_slot_str and seller:
         try:
             start_time_str = time_slot_str.split(" - ")[0]  # Extracts "11:00:00"
@@ -575,14 +765,14 @@ def cancel_order(request, order_id):
             start_time=start_time
         ).first()
         
-        if time_slot_instance:
-            # Decrement the bookings_count if it's greater than 0
-            if time_slot_instance.bookings_count > 0:
-                time_slot_instance.bookings_count -= 1
-                time_slot_instance.save()
+        if time_slot_instance and time_slot_instance.bookings_count > 0:
+            time_slot_instance.bookings_count -= 1
+            time_slot_instance.save()
 
     # Delete the order
     order.delete()
-    messages.success(request, 'Entire order has been canceled.')
+    messages.success(request, 'Entire order has been canceled, and amount refunded.')
 
     return redirect(reverse('view_orders'))
+
+# ----------------------------------------------------------------------------------------------
