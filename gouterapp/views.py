@@ -33,15 +33,6 @@ def welcome(request):
 
 
 
-# def home(request):
-#     query = request.GET.get('q')
-#     if query:
-#         sellers = Seller.objects.filter(is_approved=True, restaurant_name__icontains=query)
-#     else:
-#         sellers = Seller.objects.filter(is_approved=True)
-#     return render(request, 'home.html', {'sellers': sellers, 'MEDIA_URL': settings.MEDIA_URL})
-
-
 def home(request):
     query = request.GET.get('q')
     restaurant_type = request.GET.get('type', 'all')  # Default to 'all'
@@ -189,84 +180,6 @@ def resend_otp(request):
         messages.error(request, 'Error resending OTP.')
     return redirect('otp_verification')
 
-
-
-
-# def view_dishes(request, seller_id):
-#     seller = get_object_or_404(Seller, pk=seller_id)
-#     selected_category = request.GET.get('category', 'All')
-#     sort_order = request.GET.get('sort')  
-
-#     # Filter dishes based on availability and category
-#     if selected_category == 'All':
-#         dishes = Dish.objects.filter(restaurant=seller, is_available=True)
-#     else:
-#         dishes = Dish.objects.filter(restaurant=seller, category=selected_category, is_available=True)
-
-#     # Apply sorting based on price order
-#     if sort_order == 'low_to_high':
-#         dishes = dishes.order_by('price')
-#     elif sort_order == 'high_to_low':
-#         dishes = dishes.order_by('-price')
-
-#     # Get distinct categories from available dishes
-#     categories = Dish.objects.filter(restaurant=seller, is_available=True).values_list('category', flat=True).distinct()
-
-
-#     context = {
-#         'seller': seller,
-#         'dishes': dishes,
-#         'categories': categories,
-#         'selected_category': selected_category,
-#         'sort_order': sort_order,
-#         'MEDIA_URL': settings.MEDIA_URL,
-#     }
-#     return render(request, 'view_dishes.html', context)
-# ---------------------------------------------------------------------------------------------------------------------------------------
-# def view_dishes(request, seller_id):
-#     seller = get_object_or_404(Seller, pk=seller_id)
-#     # Retrieve the seller's dishes
-#     dishes = Dish.objects.filter(restaurant__id=seller_id, is_available=True)
-#     categories = Category.objects.filter(dish__restaurant__id=seller_id).distinct()   # Retrieve all categories for the filter dropdown
-    
-#     # Get the selected category and sort order from the GET parameters
-#     search_query = request.GET.get('search', '')
-#     selected_category = request.GET.get('category', 'All')
-#     sort_order = request.GET.get('sort', 'Default')
-
-#     # Filter dishes based on search query
-#     if search_query:
-#         dishes = dishes.filter(Q(name__icontains=search_query) | Q(description__icontains=search_query))
-
-
-#     # Filter dishes by selected category if a specific category is selected
-#     if selected_category != 'All':
-#         dishes = dishes.filter(category__name=selected_category)  # Filter by selected category
-#     else:
-#         dishes = Dish.objects.filter(restaurant=seller, is_available=True)
-
-#     # Sort dishes based on the selected sort order
-#     if sort_order == 'low_to_high':
-#         dishes = dishes.order_by('price')
-#     elif sort_order == 'high_to_low':
-#         dishes = dishes.order_by('-price')
-
-
-#     paginator = Paginator(dishes,20)
-#     page_number = request.GET.get('page')
-#     page_obj = paginator.get_page(page_number)
-
-#     context = {
-#         'dishes': dishes,
-#         'categories': categories,
-#         'selected_category': selected_category,
-#         'sort_order': sort_order,
-#         'search_query': search_query,
-#         'seller': seller,  # Assuming 'seller' is also passed to this context
-#         'MEDIA_URL': settings.MEDIA_URL,
-#         'page_obj':page_obj
-#     }
-#     return render(request, 'view_dishes.html', context)
 
 
 def view_dishes(request, seller_id):
@@ -426,77 +339,10 @@ def choose_method(request):
 
     return render(request, 'choose_method.html', {'time_slots': available_slots})
 
-# previous submit_order--------------------
-# def submit_order(request):
-#     if request.method == 'POST':
-#         selected_method = request.POST.get('method')
-#         selected_time = request.POST.get('time_slot')
 
-#         # Convert selected_time from "10:00 AM" format to a time object
-#         try:
-#             formatted_time = datetime.strptime(selected_time, "%I:%M %p").time()
-#         except ValueError:
-#             # Handle the case where the time format is incorrect
-#             messages.error(request, "Invalid time format.")
-#             return redirect('choose_method')
-
-#         # Fetch seller ID from user's cart and calculate total amount
-#         cart_items = Cart.objects.filter(user_id=request.user.id)
-#         if not cart_items.exists():
-#             messages.error(request, "Your cart is empty.")
-#             return redirect('view_dishes')
-        
-#         seller_id = cart_items.first().dish.restaurant.id
-#         seller = get_object_or_404(Seller, id=seller_id)
-#         total_amount = sum(item.dish.price * item.quantity for item in cart_items)
-
-#         # Find the corresponding time slot
-#         datetime_now = datetime.combine(datetime.today(), formatted_time)
-#         print(f"Formatted time: {formatted_time}, Seller ID: {seller.id}")
-
-#         # Try to get the time slot; adjust the query as needed
-#         try:
-#             time_slot = get_object_or_404(TimeSlot, start_time=formatted_time, seller=seller)
-#         except Http404:
-#             messages.error(request, "No TimeSlot matches the given query.")
-#             return redirect('choose_method')
-
-#         # Check if the time slot is available
-#         if time_slot.bookings_count < seller.table_number:
-#             # Update TimeSlot booking count
-#             time_slot.bookings_count += 1
-#             time_slot.save()
-
-#             # Create Order
-#             order = Order.objects.create(
-#                 seller=seller,
-#                 user=request.user,
-#                 total_amount=total_amount,
-#                 method=selected_method,
-#                 time_slot=f"{time_slot.start_time} - {time_slot.end_time}",
-#                 payment_status="Pending"
-#             )
-
-#             # Create OrderItems for each cart item
-#             for item in cart_items:
-#                 OrderItem.objects.create(
-#                     order=order,
-#                     seller=seller,
-#                     user=request.user,
-#                     dish=item.dish,
-#                     quantity=item.quantity  # Make sure to include quantity if needed
-#                 )
-
-#             # Clear the cart after order
-#             cart_items.delete()
-#             return redirect('order_success', order_id=order.order_id)
-#         else:
-#             messages.error(request, "The selected time slot is no longer available.")
-#             return redirect('choose_method')
-# --------------------------------------------------------------------------------------------
 
 client = razorpay.Client(auth=(settings.RAZORPAY_API_KEY, settings.RAZORPAY_API_SECRET))
-# client = razorpay.Client(auth=("rzp_test_9sQwBMyG5rCRnH", "jFCY27K0VUKbjks3s2amCnT9"))
+
 
 def submit_order(request):
     if request.method == 'POST':
@@ -547,7 +393,7 @@ def submit_order(request):
                 total_amount=total_amount,
                 method=selected_method,
                 time_slot=f"{time_slot.start_time} - {time_slot.end_time}",
-                payment_status="Pending",
+                payment_status="Failed",
                 razorpay_order_id=razorpay_order['id']
             )
 
@@ -562,7 +408,7 @@ def submit_order(request):
                 )
 
             # Clear the cart after order
-            cart_items.delete()
+            # cart_items.delete()
 
             # Prepare context for Razorpay checkout in payment.html
             context = {
@@ -591,23 +437,19 @@ def submit_order(request):
 
 @csrf_exempt
 def payment_callback(request, order_id):
-    print("1")
     if request.method == "POST":
         order = get_object_or_404(Order, order_id=order_id)
         payment_id = request.POST.get('razorpay_payment_id')
         razorpay_order_id = request.POST.get('razorpay_order_id')
         signature = request.POST.get('razorpay_signature')
-        print("2")
         # Verify the payment
         params_dict = {
             'razorpay_order_id': razorpay_order_id,
             'razorpay_payment_id': payment_id,
             'razorpay_signature': signature                                             #just added this
         }
-        print(params_dict)
         try:
             client.utility.verify_payment_signature(params_dict)
-            print("bithul")
             order.payment_status = 'Completed'
             order.save()
 
@@ -615,15 +457,15 @@ def payment_callback(request, order_id):
             with transaction.atomic():
                 order.seller.wallet_balance += order.total_amount
                 order.seller.save()
-                print("3")
+
+            Cart.objects.filter(user_id=request.user.id).delete() 
+            
             return redirect('order_success', order_id=order_id)
         except razorpay.errors.SignatureVerificationError:
-            print("4")
             order.payment_status = 'Failed'
-            order.save()
             messages.error(request, "Payment failed.")
+            print("3")
             return redirect('view_cart')
-        
 
 
 
@@ -673,14 +515,6 @@ def view_orders(request):
 
 # -----------------------------------------------------------------------------------------------------
 
-# @login_required
-# def cancel_dish(request, item_id):
-#     order_item = get_object_or_404(OrderItem, id=item_id, user=request.user)
-#     order_item.delete()
-#     messages.success(request, 'Dish has been canceled')
-#     return redirect(reverse('view_orders'))
-
-# -----------------------------------------------------------------------------------------------------
 @login_required
 def cancel_dish(request, item_id):
     order_item = get_object_or_404(OrderItem, id=item_id, user=request.user)
@@ -699,42 +533,6 @@ def cancel_dish(request, item_id):
 
 # -----------------------------------------------------------------------------------------------------
 
-# @login_required
-# @transaction.atomic
-# def cancel_order(request, order_id):
-#     order = get_object_or_404(Order, order_id=order_id, user=request.user)
-    
-#     # Retrieve the time slot related to this order
-#     time_slot_str = order.time_slot  # e.g., "11:00:00 - 11:30:00"
-#     seller = order.seller
-
-#     # Extract and parse the start time from the time_slot string
-#     if time_slot_str and seller:
-#         try:
-#             start_time_str = time_slot_str.split(" - ")[0]  # Extracts "11:00:00"
-#             start_time = datetime.strptime(start_time_str, "%H:%M:%S").time()  # Converts to time object
-#         except (ValueError, IndexError):
-#             messages.error(request, "Invalid time slot format.")
-#             return redirect(reverse('view_orders'))
-
-#         # Retrieve the specific TimeSlot instance using start_time
-#         time_slot_instance = TimeSlot.objects.filter(
-#             seller=seller,
-#             start_time=start_time
-#         ).first()
-        
-#         if time_slot_instance:
-#             # Decrement the bookings_count if it's greater than 0
-#             if time_slot_instance.bookings_count > 0:
-#                 time_slot_instance.bookings_count -= 1
-#                 time_slot_instance.save()
-
-#     # Delete the order
-#     order.delete()
-#     messages.success(request, 'Entire order has been canceled.')
-
-#     return redirect(reverse('view_orders'))
-# ----------------------------------------------------------------------------------------------
 
 @login_required
 @transaction.atomic

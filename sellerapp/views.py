@@ -254,6 +254,7 @@ def seller_orders(request):
             'method': order.method,
             'time_slot': order.time_slot,
             'items': items,
+            'payment_status':order.payment_status
         })
 
     context = {

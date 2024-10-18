@@ -198,6 +198,7 @@
             <a href="{% url 'home' %}" class="btn btn-warning">Back Home</a>
         </div>
         {% for order in order_data %}
+            {% if order.payment_status == "Completed" %}
             <div class="order">
                 <h1>Restaurant: {{ order.restaurant_name }}</h1>
                 <h3>Order ID: {{ order.order_id }}</h3>
@@ -224,6 +225,7 @@
                     <button type="submit" class="btn btn-cancel btn-block mt-3">Cancel Entire Order</button>
                 </form>
             </div>
+            {% endif %}
         {% endfor %}
     </div>
     <!-- Bootstrap JS and dependencies -->

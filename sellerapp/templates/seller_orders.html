@@ -101,6 +101,7 @@
                 </thead>
                 <tbody>
                     {% for order in order_data %}
+                    {% if order.payment_status == "Completed" %}
                     <tr>
                         <td>{{ order.order_id }}</td>
                         <td>{{ order.user_email }}</td>
@@ -141,11 +142,14 @@
                             </ul>
                         </td>
                     </tr>
+                    {% endif %}
                     {% empty %}
                     <tr>
                         <td colspan="6" class="no-orders">No orders received yet.</td>
                     </tr>
+                    
                     {% endfor %}
+
                 </tbody>
             </table>
         </div>

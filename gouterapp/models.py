@@ -37,7 +37,7 @@ class Order(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     method = models.CharField(max_length=10, choices=[('Dine-In', 'Dine-In'), ('Take-Out', 'Take-Out')])
-    payment_status = models.CharField(max_length=20, default='Pending')  # Options could be 'Pending', 'Completed', etc.
+    payment_status = models.CharField(max_length=20, default='failed')  # Options could be 'Pending', 'Completed', etc.
     time_slot = models.CharField(max_length=50)
     created_at = models.DateTimeField(default=timezone.now)  # Adds created_at field
     razorpay_order_id = models.CharField(max_length=100, blank=True, null=True)  # Field for Razorpay order ID
