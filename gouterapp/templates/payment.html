@@ -187,6 +187,26 @@
         <p><strong>Method:</strong> {{ submit_order.method }}</p>
         <p><strong>Time Slot:</strong> {{ submit_order.time_slot }}</p>
 
+        <h4>Available Coupons</h4>
+        <ul>
+            {% for coupon in coupons %}
+            <li>{{ coupon.code }} - {{ coupon.discount }}% off (expires on {{ coupon.expiry_date }})</li>
+            {% endfor %}
+        </ul>
+
+        <!-- Coupon Input -->
+        {% if not coupon_applied %}
+            <form id="apply-coupon-form" method="POST" action="{% url 'apply_coupon' %}">
+                {% csrf_token %}
+                <input type="text" name="coupon_code" placeholder="Enter coupon code">
+                <button type="submit" class="btn btn-primary">Apply Coupon</button>
+            </form>
+        {% else %}
+            <p class="text-success">Coupon already applied!</p>
+        {% endif %}
+
+        <br>
+
         <button id="rzp-button">Pay Now</button>
         <br>
         <br>

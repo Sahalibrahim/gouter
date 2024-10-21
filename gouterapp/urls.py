@@ -25,6 +25,9 @@ urlpatterns = [
     path('orders/cancel_dish/<int:item_id>/',views.cancel_dish, name='cancel_dish'),
     path('orders/cancel_order/<int:order_id>/',views.cancel_order, name='cancel_order'),
     path('payment-callback/<int:order_id>/', views.payment_callback, name='payment_callback'),
+    path('wallet-balance/',views.wallet_balance_view, name='wallet_balance'),
+    path('apply-coupon/',views.apply_coupon,name='apply_coupon'),
+    path('payment/', views.payment, name='payment'),
 ]
 
 

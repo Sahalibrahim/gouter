@@ -10,7 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.utils import timezone
 from datetime import timedelta,datetime
-from sellerapp.models import Seller,Dish,TimeSlot
+from sellerapp.models import Seller,Dish,TimeSlot,Coupon
 from adminapp.models import Category
 from django.conf import settings
 from django.shortcuts import render, get_object_or_404
@@ -366,6 +366,9 @@ def submit_order(request):
         seller = get_object_or_404(Seller, id=seller_id)
         total_amount = sum(item.dish.price * item.quantity for item in cart_items)
 
+        #fetch coupons for the seller
+        coupons = Coupon.objects.filter(seller=seller, is_available=True)
+
         # Find the corresponding time slot
         try:
             time_slot = get_object_or_404(TimeSlot, start_time=formatted_time, seller=seller)
@@ -407,8 +410,8 @@ def submit_order(request):
                     quantity=item.quantity
                 )
 
-            # Clear the cart after order
-            # cart_items.delete()
+            #save order ID in session for coupon usage
+            request.session['order_id'] = order.order_id
 
             # Prepare context for Razorpay checkout in payment.html
             context = {
@@ -423,6 +426,7 @@ def submit_order(request):
                     'method': selected_method,
                     'time_slot': f"{time_slot.start_time} - {time_slot.end_time}",
                 },
+                'coupons': coupons,
                 'user': request.user,
                 'callback_url': reverse('payment_callback', kwargs={'order_id': order.order_id})
             }
@@ -431,6 +435,7 @@ def submit_order(request):
         else:
             messages.error(request, "The selected time slot is no longer available.")
             return redirect('choose_method')
+        
 
 
 # ----------------------------------------------------------------------------------------
@@ -574,3 +579,111 @@ def cancel_order(request, order_id):
     return redirect(reverse('view_orders'))
 
 # ----------------------------------------------------------------------------------------------
+
+#wallet balance of the user
+
+def wallet_balance_view(request):
+    profile = get_object_or_404(Profile, user=request.user)
+    return render(request, 'wallet_balance.html',{
+        'wallet_balance':profile.wallet_balance
+    })
+
+
+# -----------------------------------------------------------------------------------------------
+
+#coupons
+def apply_coupon(request):
+    if request.method == 'POST':
+        coupon_code = request.POST.get('coupon_code')
+        order_id = request.session.get('order_id')  # Assuming you stored the order_id in the session
+
+        # Fetch the order
+        order = get_object_or_404(Order, order_id=order_id)
+
+        try:
+            # Fetch the coupon
+            coupon = Coupon.objects.get(code=coupon_code, seller=order.seller, is_available=True)
+
+            # Check if coupon is expired
+            if coupon.expiry_date < datetime.now().date():
+                messages.error(request, "This coupon has expired.")
+                return redirect('payment')
+
+            # Apply discount to the total amount
+            discount_amount = (coupon.discount / 100) * order.total_amount
+            new_total = order.total_amount - discount_amount
+
+            # Update the order total amount
+            order.total_amount = new_total
+            order.save()
+
+            # Pass new total amount to session
+            request.session['coupon_applied'] = True
+            request.session['discounted_total'] = int(new_total)  # Store the discounted total in the session
+
+            messages.success(request, f"Coupon applied! New total is ₹{new_total:.2f}")
+            return redirect('payment')
+
+        except Coupon.DoesNotExist:
+            messages.error(request, "Invalid coupon code or not available for this seller.")
+            return redirect('payment')
+        
+
+
+
+
+client = razorpay.Client(auth=(settings.RAZORPAY_API_KEY, settings.RAZORPAY_API_SECRET))
+
+def payment(request):
+    # Assuming the order_id is stored in the session
+    order_id = request.session.get('order_id')
+    
+    if not order_id:
+        return render(request, 'error.html', {'message': 'No order found.'})
+    
+    # Fetch the order
+    order = get_object_or_404(Order, pk=order_id)
+    cart_items = Cart.objects.filter(user_id=request.user.id)
+    
+    if not cart_items.exists():
+        messages.error(request, "Your cart is empty.")
+        return redirect('view_dishes', seller_id=seller_id)
+    
+    # Get seller information
+    seller_id = cart_items.first().dish.restaurant.id
+    seller = get_object_or_404(Seller, id=seller_id)
+    
+    # Check if coupon is applied
+    coupon_applied = request.session.get('coupon_applied', False)
+
+    # Use discounted total if coupon is applied, otherwise use original total
+    total_amount = request.session.get('discounted_total', order.total_amount)
+    total_amount_in_paise = int(total_amount * 100)
+    
+    # Create a Razorpay order
+    try:
+        razorpay_order = client.order.create({
+            'amount': total_amount_in_paise,  # Amount in paise
+            'currency': 'INR',
+            'payment_capture': '1'  # Auto-capture payment
+        })
+    except Exception as e:
+        messages.error(request, f"Error creating Razorpay order: {str(e)}")
+        return redirect('payment')  # Redirect back to the payment page in case of error
+
+    # Prepare context for template
+    context = {
+        'submit_order': {
+            'key_id': settings.RAZORPAY_API_KEY,
+            'order_id': order.order_id,
+            'display_amount': total_amount,  # Total amount after applying coupon if any
+            'method': order.method,  # Dine-In or Take-out
+            'time_slot': order.time_slot,
+            'restaurant_name': order.seller.restaurant_name,  # Seller/Restaurant name
+            'razorpay_order_id': razorpay_order['id']  # Actual Razorpay order ID
+        },
+        'coupon_applied': coupon_applied,
+        'coupons': order.seller.coupon_set.filter(is_available=True)  # Fetch available coupons for the seller
+    }
+    
+    return render(request, 'payment.html', context)
