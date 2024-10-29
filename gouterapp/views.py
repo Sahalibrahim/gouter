@@ -393,11 +393,13 @@ def submit_order(request):
             order = Order.objects.create(
                 seller=seller,
                 user=request.user,
+                total_amount_before_coupon=total_amount,
                 total_amount=total_amount,
                 method=selected_method,
                 time_slot=f"{time_slot.start_time} - {time_slot.end_time}",
                 payment_status="Failed",
-                razorpay_order_id=razorpay_order['id']
+                razorpay_order_id=razorpay_order['id'],
+                coupon_usage='unused',
             )
 
             # Create OrderItems for each cart item
@@ -479,12 +481,15 @@ def payment_callback(request, order_id):
         
 def order_success(request, order_id):
     order = get_object_or_404(Order, order_id=order_id)
+    order_items=OrderItem.objects.filter(order=order)
     context = {
         'restaurant_name': order.seller.restaurant_name,
         'order_id': order.order_id,
         'time_slot': order.time_slot,
         'method': order.method,
         'total_amount': order.total_amount,
+        'payment_status': order.payment_status,
+        'order_items':order_items
     }
     return render(request, 'ticket.html', context)
 
@@ -615,6 +620,7 @@ def apply_coupon(request):
 
             # Update the order total amount
             order.total_amount = new_total
+            order.coupon_usage='used'
             order.save()
 
             # Pass new total amount to session
@@ -687,3 +693,59 @@ def payment(request):
     }
     
     return render(request, 'payment.html', context)
+
+def view_ticket(request,order_id):
+    try:
+        order = Order.objects.get(order_id=order_id,user=request.user)
+    except order.DoesNotExist:
+        return redirect('view_orders')
+    except Order.MultipleObjectsReturned:
+        return redirect('view_orders')
+    
+    order_items=OrderItem.objects.filter(order=order)
+    
+    context = {
+        'restaurant_name':order.seller.restaurant_name,
+        'order_id':order.order_id,
+        'time_slot':order.time_slot,
+        'method':order.method,
+        'total_amount':order.total_amount,
+        'payment_status':order.payment_status,
+        'order_items':order_items
+    }
+    return render(request,'ticket.html',context)
+
+
+# --------------------------------------------------------------------------------------------------
+#wallet-payment
+
+@login_required
+def wallet_payment(request, order_id):
+    order = get_object_or_404(Order, order_id=order_id)
+
+    # Get the user's profile to access the wallet balance
+    user_profile = request.user.profile
+
+    # Check if the user has enough balance in their wallet
+    if user_profile.wallet_balance < order.total_amount:
+        messages.error(request, "Insufficient wallet balance.")
+        return redirect('payment', order_id=order_id)
+
+    # If balance is sufficient, deduct from wallet and complete the order
+    with transaction.atomic():
+        user_profile.wallet_balance -= order.total_amount
+        user_profile.save()
+
+        # Update the order status to completed
+        order.payment_status = 'Completed'
+        order.save()
+
+        # Transfer money to the seller's wallet
+        order.seller.wallet_balance += order.total_amount
+        order.seller.save()
+
+    # Clear the user's cart
+    Cart.objects.filter(user=request.user).delete()
+
+    # Redirect to success page
+    return redirect('order_success', order_id=order_id)

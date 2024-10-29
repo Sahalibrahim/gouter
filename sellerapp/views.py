@@ -7,8 +7,12 @@ from django.contrib.auth.decorators import login_required
 from .models import Seller,Dish,Coupon,TimeSlot
 import os
 from gouterapp.models import Order,OrderItem
-from django.db.models import Q
+from django.db.models import Q,Sum,Count
 from django.core.paginator import Paginator
+from django.utils import timezone
+from datetime import timedelta,datetime
+from django.http import HttpResponse
+import csv
 
 def seller_signup(request):
     if request.method == 'POST':
@@ -46,19 +50,89 @@ def seller_login(request):
 
     return render(request, 'seller_login.html', {'form': form})
 
+
 @login_required(login_url='/login/')  # Ensure the user is logged in
 def seller_dashboard(request):
     # Check if the user has an associated seller profile
     if not hasattr(request.user, 'seller'):
-        # Redirect or show an error if the user is not a seller
         return redirect('/')  # Redirect to homepage or another appropriate page
-        # Or render an error page like: return render(request, 'not_authorized.html')
 
-    # If the user is a seller, proceed to show the dashboard
     seller = request.user.seller
     restaurant_name = seller.restaurant_name  # Replace with actual field name for restaurant name
+    
+    orders = Order.objects.filter(seller=seller, payment_status='Completed')  # Filter by successful orders
+
+
+    # Top 10 dishes
+    top_dishes = (
+        OrderItem.objects.filter(seller=seller)
+        .values('dish__name')
+        .annotate(total_quantity=Count('dish'))
+        .order_by('-total_quantity')[:10]
+    )
+
+    # Top 10 categories
+    top_categories = (
+        OrderItem.objects.filter(seller=seller)
+        .values('dish__category__name')
+        .annotate(total_quantity=Count('dish__category'))
+        .order_by('-total_quantity')[:10]
+    )
+
+    # Initialize variables for sales report
+    sales_by_day = sales_by_week = sales_by_month = sales_by_year = 0
+    sales_by_day_before_coupon = sales_by_week_before_coupon = sales_by_month_before_coupon = sales_by_year_before_coupon = 0
+    custom_sales = custom_sales_before_coupon = None
+    custom_start_date = custom_end_date = None
+
+    # Filter by day
+    today = timezone.now().date()
+    sales_by_day = orders.filter(created_at__date=today).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
+    sales_by_day_before_coupon = orders.filter(created_at__date=today).aggregate(total_sales_before_coupon=Sum('total_amount_before_coupon'))['total_sales_before_coupon'] or 0
+
+    # Filter by week
+    week_start = today - timedelta(days=today.weekday())  # Get start of the week (Monday)
+    sales_by_week = orders.filter(created_at__date__gte=week_start).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
+    sales_by_week_before_coupon = orders.filter(created_at__date__gte=week_start).aggregate(total_sales_before_coupon=Sum('total_amount_before_coupon'))['total_sales_before_coupon'] or 0
+
+    # Filter by month
+    sales_by_month = orders.filter(created_at__year=today.year, created_at__month=today.month).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
+    sales_by_month_before_coupon = orders.filter(created_at__year=today.year, created_at__month=today.month).aggregate(total_sales_before_coupon=Sum('total_amount_before_coupon'))['total_sales_before_coupon'] or 0
+
+    # Filter by year
+    sales_by_year = orders.filter(created_at__year=today.year).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
+    sales_by_year_before_coupon = orders.filter(created_at__year=today.year).aggregate(total_sales_before_coupon=Sum('total_amount_before_coupon'))['total_sales_before_coupon'] or 0
+
+    # Custom date range
+    if request.method == 'POST':
+        custom_start_date = request.POST.get('start_date')
+        custom_end_date = request.POST.get('end_date')
+
+        if custom_start_date and custom_end_date:
+            try:
+                start_date = datetime.strptime(custom_start_date, "%Y-%m-%d")
+                end_date = datetime.strptime(custom_end_date, "%Y-%m-%d")
+                custom_sales = orders.filter(created_at__date__gte=start_date, created_at__date__lte=end_date).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
+                custom_sales_before_coupon = orders.filter(created_at__date__gte=start_date, created_at__date__lte=end_date).aggregate(total_sales_before_coupon=Sum('total_amount_before_coupon'))['total_sales_before_coupon'] or 0
+            except ValueError:
+                custom_sales = "Invalid date format"
+
     context = {
-        'restaurant_name': restaurant_name
+        'restaurant_name': restaurant_name,
+        'sales_by_day': sales_by_day,
+        'sales_by_day_before_coupon': sales_by_day_before_coupon,
+        'sales_by_week': sales_by_week,
+        'sales_by_week_before_coupon': sales_by_week_before_coupon,
+        'sales_by_month': sales_by_month,
+        'sales_by_month_before_coupon': sales_by_month_before_coupon,
+        'sales_by_year': sales_by_year,
+        'sales_by_year_before_coupon': sales_by_year_before_coupon,
+        'custom_sales': custom_sales,
+        'custom_sales_before_coupon': custom_sales_before_coupon,
+        'custom_start_date': custom_start_date,
+        'custom_end_date': custom_end_date,
+        'top_dishes': top_dishes,
+        'top_categories': top_categories,
     }
     return render(request, 'seller_dashboard.html', context)
 
@@ -264,4 +338,128 @@ def seller_orders(request):
 
     return render(request, 'seller_orders.html', context)  # Create a template for displaying seller orders
 
+# ---------------------------------------------------------------------------------------------------------------------
 
+#sales report
+
+def sales_report(request):
+    # Check if the user has an associated seller profile
+    if not hasattr(request.user, 'seller'):
+        return redirect('/')  # Redirect to homepage or another appropriate page
+
+    seller = request.user.seller
+    restaurant_name = seller.restaurant_name  # Replace with actual field name for restaurant name
+    
+    orders = Order.objects.filter(seller=seller, payment_status='Completed')  # Filter by successful orders
+
+    top_dishes = (
+        OrderItem.objects.filter(seller=seller)
+        .values('dish__name')
+        .annotate(total_quantity=Count('dish'))
+        .order_by('-total_quantity')[:10]
+    )
+
+    # Top 10 categories
+    top_categories = (
+        OrderItem.objects.filter(seller=seller)
+        .values('dish__category__name')
+        .annotate(total_quantity=Count('dish__category'))
+        .order_by('-total_quantity')[:10]
+    )
+
+    # Initialize variables for sales report
+    sales_by_day = sales_by_week = sales_by_month = sales_by_year = 0
+    sales_by_day_before_coupon = sales_by_week_before_coupon = sales_by_month_before_coupon = sales_by_year_before_coupon = 0
+    custom_sales = custom_sales_before_coupon = None
+    custom_start_date = custom_end_date = None
+
+    # Filter by day
+    today = timezone.now().date()
+    sales_by_day = orders.filter(created_at__date=today).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
+    sales_by_day_before_coupon = orders.filter(created_at__date=today).aggregate(total_sales_before_coupon=Sum('total_amount_before_coupon'))['total_sales_before_coupon'] or 0
+
+    # Filter by week
+    week_start = today - timedelta(days=today.weekday())  # Get start of the week (Monday)
+    sales_by_week = orders.filter(created_at__date__gte=week_start).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
+    sales_by_week_before_coupon = orders.filter(created_at__date__gte=week_start).aggregate(total_sales_before_coupon=Sum('total_amount_before_coupon'))['total_sales_before_coupon'] or 0
+
+    # Filter by month
+    sales_by_month = orders.filter(created_at__year=today.year, created_at__month=today.month).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
+    sales_by_month_before_coupon = orders.filter(created_at__year=today.year, created_at__month=today.month).aggregate(total_sales_before_coupon=Sum('total_amount_before_coupon'))['total_sales_before_coupon'] or 0
+
+    # Filter by year
+    sales_by_year = orders.filter(created_at__year=today.year).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
+    sales_by_year_before_coupon = orders.filter(created_at__year=today.year).aggregate(total_sales_before_coupon=Sum('total_amount_before_coupon'))['total_sales_before_coupon'] or 0
+
+    # Custom date range
+    if request.method == 'POST':
+        custom_start_date = request.POST.get('start_date')
+        custom_end_date = request.POST.get('end_date')
+
+        if custom_start_date and custom_end_date:
+            try:
+                start_date = datetime.strptime(custom_start_date, "%Y-%m-%d")
+                end_date = datetime.strptime(custom_end_date, "%Y-%m-%d")
+                custom_sales = orders.filter(created_at__date__gte=start_date, created_at__date__lte=end_date).aggregate(total_sales=Sum('total_amount'))['total_sales'] or 0
+                custom_sales_before_coupon = orders.filter(created_at__date__gte=start_date, created_at__date__lte=end_date).aggregate(total_sales_before_coupon=Sum('total_amount_before_coupon'))['total_sales_before_coupon'] or 0
+            except ValueError:
+                custom_sales = "Invalid date format"
+
+    context = {
+        'restaurant_name': restaurant_name,
+        'sales_by_day': sales_by_day,
+        'sales_by_day_before_coupon': sales_by_day_before_coupon,
+        'sales_by_week': sales_by_week,
+        'sales_by_week_before_coupon': sales_by_week_before_coupon,
+        'sales_by_month': sales_by_month,
+        'sales_by_month_before_coupon': sales_by_month_before_coupon,
+        'sales_by_year': sales_by_year,
+        'sales_by_year_before_coupon': sales_by_year_before_coupon,
+        'custom_sales': custom_sales,
+        'custom_sales_before_coupon': custom_sales_before_coupon,
+        'custom_start_date': custom_start_date,
+        'custom_end_date': custom_end_date,
+        'top_dishes': top_dishes,
+        'top_categories': top_categories,
+    }
+    return render(request, 'seller_dashboard.html', context)
+
+
+
+
+@login_required(login_url='/login/')
+def download_sales_report(request):
+    # Check if the user has an associated seller profile
+    if not hasattr(request.user, 'seller'):
+        return redirect('/')
+    
+    seller = request.user.seller
+    orders = Order.objects.filter(seller=seller, payment_status='Completed')
+
+    # Check for custom date range filters in GET request
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    if start_date and end_date:
+        try:
+            # Parse the dates and include the whole end date by adding 1 day
+            start_date_obj = datetime.strptime(start_date, "%Y-%m-%d")
+            end_date_obj = datetime.strptime(end_date, "%Y-%m-%d")  # End of the selected day
+            
+            # Filter orders by date range (assuming created_at is DateTimeField)
+            orders = orders.filter(created_at__date__gte=start_date_obj, created_at__date__lte=end_date_obj)
+        except ValueError:
+            # Handle date parsing errors if necessary
+            pass
+
+    # Prepare response as a CSV file
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="sales_report.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Order ID', 'User', 'Total Amount Before Coupon', 'Total Amount', 'Method', 'Payment Status', 'Created At'])
+
+    for order in orders:
+        writer.writerow([order.order_id, order.user.username, order.total_amount_before_coupon, order.total_amount, order.method, order.payment_status, order.created_at])
+
+    return response

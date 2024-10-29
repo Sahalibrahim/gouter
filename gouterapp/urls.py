@@ -28,6 +28,8 @@ urlpatterns = [
     path('wallet-balance/',views.wallet_balance_view, name='wallet_balance'),
     path('apply-coupon/',views.apply_coupon,name='apply_coupon'),
     path('payment/', views.payment, name='payment'),
+    path('ticket/<int:order_id>/',views.view_ticket,name='view_ticket'),
+    path('wallet-payment/<int:order_id>/', views.wallet_payment, name='wallet_payment'),
 ]
 
 

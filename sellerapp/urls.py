@@ -20,7 +20,8 @@ urlpatterns = [
     path('seller/coupons/toggle/<int:coupon_id>/', views.toggle_coupon_availability, name='toggle_coupon_availability'),
     path('create-time-slot/', views.create_time_slot, name='create_time_slot'),
     path('seller/orders/', views.seller_orders, name='seller_orders'),
-
+    path('sales-report/', views.sales_report, name='sales_report'),
+    path('download-sales-report/', views.download_sales_report, name='download_sales_report'),
 ]
 
 if settings.DEBUG:

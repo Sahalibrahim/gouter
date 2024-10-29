@@ -35,7 +35,9 @@ class Order(models.Model):
     order_id = models.AutoField(primary_key=True)
     seller = models.ForeignKey(Seller, on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    total_amount_before_coupon = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True) 
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    coupon_usage = models.CharField(max_length=10, default='unused')
     method = models.CharField(max_length=10, choices=[('Dine-In', 'Dine-In'), ('Take-Out', 'Take-Out')])
     payment_status = models.CharField(max_length=20, default='failed')  # Options could be 'Pending', 'Completed', etc.
     time_slot = models.CharField(max_length=50)

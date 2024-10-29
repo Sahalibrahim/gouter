@@ -156,6 +156,23 @@
         <div class="ticket-detail">
             <strong>Total Amount:</strong> Rs {{ total_amount }}/-
         </div>
+        <div class="ticket-detail">
+            <strong>Payment Status:</strong> {{ payment_status }}
+        </div>
+        <hr>
+        <div class="ticket-detail">
+            <h4>Ordered Dishes</h4>
+            <ul style="list-style-type:none; padding: 0;">
+                {% for item in order_items %}
+                    <li>
+                        <strong>{{ item.dish.name }}</strong> (x{{ item.quantity }}) - Rs {{ item.dish.price|floatformat:2 }}
+                    </li>
+                {% empty %}
+                    <li>No items found in this order.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
         <a href="{% url 'home' %}" class="btn btn-warning">Back to home</a>
     </div>
 

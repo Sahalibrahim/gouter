@@ -220,6 +220,8 @@
                         </li>
                     {% endfor %}
                 </ul>
+                <a href="{% url 'view_ticket' order.order_id %}" class="btn btn-primary btn-block mt-3">View Ticket</a>
+                <br>
                 <form method="POST" action="{% url 'cancel_order' order.order_id %}">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-cancel btn-block mt-3">Cancel Entire Order</button>

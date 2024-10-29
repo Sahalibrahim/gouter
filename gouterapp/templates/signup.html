@@ -1,3 +1,5 @@
+{% load static %}
+{% load socialaccount %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -105,6 +107,9 @@
 
                     <button class="btn btn-primary rounded mb-3" type="submit">Signup</button>
                     <p>already have an accout then <a href="{% url 'login' %}">login here</a></p>
+                    <a href="{% provider_login_url 'google' %}" class="btn btn-outline-primary">Signin with Google</a>
+                    <br>
+                    <br>
                 </form>
                 <a href="{% url 'home' %}" class="btn btn-warning">Go home</a>
             </div>

@@ -49,16 +49,6 @@ class Seller(models.Model):
 
 
 class Dish(models.Model):
-    # CATEGORY_CHOICES = [
-    #     ('Shakes', 'Shakes'),
-    #     ('Juices', 'Juices'),
-    #     ('Chinese', 'Chinese'),
-    #     ('Arabic', 'Arabic'),
-    #     ('Curry', 'Curry'),
-    #     ('Mandhi', 'Mandhi'),
-    #     ('Deserts', 'Deserts'),
-    # ]
-
     name = models.CharField(max_length=255)  # Increased max_length to 255
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)  # Updated max_digits
