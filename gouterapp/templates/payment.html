@@ -105,75 +105,49 @@
     </style>
 </head>
 
-<body>
+    <body>
 
-    <div class="payment-container">
-        <h2 class="text-center">Order Summary</h2>
-        <hr>
-        <p><strong>Order ID:</strong> {{ submit_order.order_id }}</p>
-        <p><strong>Amount to Pay:</strong> ₹{{ submit_order.display_amount }}.00</p>
-        <p><strong>Method:</strong> {{ submit_order.method }}</p>
-        <p><strong>Time Slot:</strong> {{ submit_order.time_slot }}</p>
+        <div class="payment-container">
+            <h2 class="text-center">Order Summary</h2>
+            <hr>
+            <p><strong>Order ID:</strong> {{ submit_order.order_id }}</p>
+            <p><strong>Amount to Pay:</strong> ₹{{ submit_order.display_amount }}.00</p>
+            <p><strong>Method:</strong> {{ submit_order.method }}</p>
+            <p><strong>Time Slot:</strong> {{ submit_order.time_slot }}</p>
 
-        <div class="coupon-section">
-            <h4>Available Coupons</h4>
-            <ul>
-                {% for coupon in coupons %}
-                <li>{{ coupon.code }} - {{ coupon.discount }}% off (expires on {{ coupon.expiry_date }})</li>
-                {% endfor %}
-            </ul>
+            <div class="coupon-section">
+                <h4>Available Coupons</h4>
+                <ul>
+                    {% for coupon in coupons %}
+                    <li>{{ coupon.code }} - {{ coupon.discount }}% off (expires on {{ coupon.expiry_date }})</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Coupon Input -->
+            {% if not coupon_applied %}
+            <form id="apply-coupon-form" method="POST" action="{% url 'apply_coupon' %}">
+                {% csrf_token %}
+                <input type="text" name="coupon_code" placeholder="Enter coupon code" class="form-control my-2" />
+                <button type="submit" class="btn btn-primary w-100">Apply Coupon</button>
+            </form>
+            {% else %}
+            <p class="text-success text-center mt-2">Coupon already applied!</p>
+            {% endif %}
+
+            <button id="rzp-button">Pay Now</button>
+            <button id="wallet-button" class="btn btn-warning mt-3">Pay with Wallet</button>
+            <a class="btn btn-home" href="{% url 'home' %}">Go Home</a>
         </div>
 
-        <!-- Coupon Input -->
-        {% if not coupon_applied %}
-        <form id="apply-coupon-form" method="POST" action="{% url 'apply_coupon' %}">
-            {% csrf_token %}
-            <input type="text" name="coupon_code" placeholder="Enter coupon code" class="form-control my-2" />
-            <button type="submit" class="btn btn-primary w-100">Apply Coupon</button>
-        </form>
-        {% else %}
-        <p class="text-success text-center mt-2">Coupon already applied!</p>
-        {% endif %}
-
-        <button id="rzp-button">Pay Now</button>
-        <button id="wallet-button" class="btn btn-warning mt-3">Pay with Wallet</button>
-        <a class="btn btn-home" href="{% url 'home' %}">Go Home</a>
-    </div>
-
-    <script>
-        // Wallet Payment Logic
-        document.getElementById('wallet-button').onclick = function(e) {
-            e.preventDefault();
-            // Send the request to wallet payment view
-            var form = document.createElement('form');
-            form.setAttribute('method', 'POST');
-            form.setAttribute('action', "{% url 'wallet_payment' order_id=submit_order.order_id %}");
-
-            // Append CSRF token to form
-            var csrfInput = document.createElement('input');
-            csrfInput.setAttribute('type', 'hidden');
-            csrfInput.setAttribute('name', 'csrfmiddlewaretoken');
-            csrfInput.setAttribute('value', '{{ csrf_token }}');
-            form.appendChild(csrfInput);
-
-            // Append form to body and submit
-            document.body.appendChild(form);
-            form.submit();
-        }
-
-        // Razorpay payment options
-        var options = {
-            "key": "{{ submit_order.key_id }}",  // Enter the Key ID generated from the Razorpay Dashboard
-            "amount": "{{ submit_order.amount }}",  // Amount is in currency subunits (e.g., 100 rupees is 10000 paise)
-            "currency": "INR",
-            "name": "{{ submit_order.restaurant_name }}",
-            "description": "Order #{{ submit_order.order_id }}",
-            "order_id": "{{ submit_order.razorpay_order_id }}",  // Order ID generated in your Django backend
-            "handler": function (response) {
-                // Send the payment details to your Django backend after a successful transaction
+        <script>
+            // Wallet Payment Logic
+            document.getElementById('wallet-button').onclick = function(e) {
+                e.preventDefault();
+                // Send the request to wallet payment view
                 var form = document.createElement('form');
                 form.setAttribute('method', 'POST');
-                form.setAttribute('action', "{% url 'payment_callback' order_id=submit_order.order_id %}");
+                form.setAttribute('action', "{% url 'wallet_payment' order_id=submit_order.order_id %}");
 
                 // Append CSRF token to form
                 var csrfInput = document.createElement('input');
@@ -182,48 +156,74 @@
                 csrfInput.setAttribute('value', '{{ csrf_token }}');
                 form.appendChild(csrfInput);
 
-                // Append Razorpay payment details to form
-                var paymentIdInput = document.createElement('input');
-                paymentIdInput.setAttribute('type', 'hidden');
-                paymentIdInput.setAttribute('name', 'razorpay_payment_id');
-                paymentIdInput.setAttribute('value', response.razorpay_payment_id);
-                form.appendChild(paymentIdInput);
-
-                var orderIdInput = document.createElement('input');
-                orderIdInput.setAttribute('type', 'hidden');
-                orderIdInput.setAttribute('name', 'razorpay_order_id');
-                orderIdInput.setAttribute('value', response.razorpay_order_id);
-                form.appendChild(orderIdInput);
-
-                var signatureInput = document.createElement('input');
-                signatureInput.setAttribute('type', 'hidden');
-                signatureInput.setAttribute('name', 'razorpay_signature');
-                signatureInput.setAttribute('value', response.razorpay_signature);
-                form.appendChild(signatureInput);
-
                 // Append form to body and submit
                 document.body.appendChild(form);
                 form.submit();
-            },
-            "prefill": {
-                "name": "Test User",  // Can be prefilled with user details
-                "email": "{{ user.email }}",
-                "contact": "{{ user.phone_number }}"
-            },
-            "theme": {
-                "color": "#3399cc"
             }
-        };
 
-        // Attach Razorpay checkout to the button
-        document.getElementById('rzp-button').onclick = function (e) {
-            var rzp1 = new Razorpay(options);
-            rzp1.open();
-            e.preventDefault();  // Prevent default button action
-        }
-    </script>
+            // Razorpay payment options
+            var options = {
+                "key": "{{ submit_order.key_id }}",  // Enter the Key ID generated from the Razorpay Dashboard
+                "amount": "{{ submit_order.amount }}",  // Amount is in currency subunits (e.g., 100 rupees is 10000 paise)
+                "currency": "INR",
+                "name": "{{ submit_order.restaurant_name }}",
+                "description": "Order #{{ submit_order.order_id }}",
+                "order_id": "{{ submit_order.razorpay_order_id }}",  // Order ID generated in your Django backend
+                "handler": function (response) {
+                    // Send the payment details to your Django backend after a successful transaction
+                    var form = document.createElement('form');
+                    form.setAttribute('method', 'POST');
+                    form.setAttribute('action', "{% url 'payment_callback' order_id=submit_order.order_id %}");
 
-</body>
+                    // Append CSRF token to form
+                    var csrfInput = document.createElement('input');
+                    csrfInput.setAttribute('type', 'hidden');
+                    csrfInput.setAttribute('name', 'csrfmiddlewaretoken');
+                    csrfInput.setAttribute('value', '{{ csrf_token }}');
+                    form.appendChild(csrfInput);
+
+                    // Append Razorpay payment details to form
+                    var paymentIdInput = document.createElement('input');
+                    paymentIdInput.setAttribute('type', 'hidden');
+                    paymentIdInput.setAttribute('name', 'razorpay_payment_id');
+                    paymentIdInput.setAttribute('value', response.razorpay_payment_id);
+                    form.appendChild(paymentIdInput);
+
+                    var orderIdInput = document.createElement('input');
+                    orderIdInput.setAttribute('type', 'hidden');
+                    orderIdInput.setAttribute('name', 'razorpay_order_id');
+                    orderIdInput.setAttribute('value', response.razorpay_order_id);
+                    form.appendChild(orderIdInput);
+
+                    var signatureInput = document.createElement('input');
+                    signatureInput.setAttribute('type', 'hidden');
+                    signatureInput.setAttribute('name', 'razorpay_signature');
+                    signatureInput.setAttribute('value', response.razorpay_signature);
+                    form.appendChild(signatureInput);
+
+                    // Append form to body and submit
+                    document.body.appendChild(form);
+                    form.submit();
+                },
+                "prefill": {
+                    "name": "Test User",  // Can be prefilled with user details
+                    "email": "{{ user.email }}",
+                    "contact": "{{ user.phone_number }}"
+                },
+                "theme": {
+                    "color": "#3399cc"
+                }
+            };
+
+            // Attach Razorpay checkout to the button
+            document.getElementById('rzp-button').onclick = function (e) {
+                var rzp1 = new Razorpay(options);
+                rzp1.open();
+                e.preventDefault();  // Prevent default button action
+            }
+        </script>
+
+    </body>
 
 </html>
 

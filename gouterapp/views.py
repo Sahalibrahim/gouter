@@ -749,3 +749,42 @@ def wallet_payment(request, order_id):
 
     # Redirect to success page
     return redirect('order_success', order_id=order_id)
+
+
+def retry_pay(request,order_id):
+    order = get_object_or_404(Order, pk=order_id)
+    total_amount = order.total_amount
+    total_amount_in_paise = int(total_amount * 100)
+
+    if order.coupon_usage == 'used':
+        coupon_applied = True
+    else:
+        coupon_applied = False
+    
+
+    # Create a Razorpay order
+    try:
+        razorpay_order = client.order.create({
+            'amount': total_amount_in_paise,  # Amount in paise
+            'currency': 'INR',
+            'payment_capture': '1'  # Auto-capture payment
+        })
+    except Exception as e:
+        messages.error(request, f"Error creating Razorpay order: {str(e)}")
+        return redirect('payment')  # Redirect back to the payment page in case of error
+    
+    context = {
+        'submit_order': {
+            'key_id': settings.RAZORPAY_API_KEY,
+            'order_id': order.order_id,
+            'display_amount': total_amount,  # Total amount after applying coupon if any
+            'method': order.method,  # Dine-In or Take-out
+            'time_slot': order.time_slot,
+            'restaurant_name': order.seller.restaurant_name,  # Seller/Restaurant name
+            'razorpay_order_id': razorpay_order['id']  # Actual Razorpay order ID
+        },
+        'coupon_applied': coupon_applied,
+        'coupons': order.seller.coupon_set.filter(is_available=True)  # Fetch available coupons for the seller
+    }
+    
+    return render(request, 'payment.html', context)

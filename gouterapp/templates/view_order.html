@@ -192,7 +192,7 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    {% comment %} <div class="container">
         <h2>Your Orders</h2>
         <div class="text-center mb-3"> <!-- Center the button -->
             <a href="{% url 'home' %}" class="btn btn-warning">Back Home</a>
@@ -229,7 +229,49 @@
             </div>
             {% endif %}
         {% endfor %}
+    </div> {% endcomment %}
+
+    <div class="container">
+        <h2>Your Orders</h2>
+        <div class="text-center mb-3">
+            <a href="{% url 'home' %}" class="btn btn-warning">Back Home</a>
+        </div>
+        {% for order in order_data %}
+            <div class="order">
+                <h1>Restaurant: {{ order.restaurant_name }}</h1>
+                <h3>Order ID: {{ order.order_id }}</h3>
+                <div class="order-details">
+                    <p><strong>Total Amount:</strong> ₹{{ order.total_amount }}/-</p>
+                    <p><strong>Method:</strong> {{ order.method }}</p>
+                    <p><strong>Time Slot:</strong> {{ order.time_slot }}</p>
+                    <p><strong>Status:</strong> {{ order.payment_status }}</p>
+                </div>
+                <h3>Ordered Dishes:</h3>
+                <ul>
+                    {% for item in order.items %}
+                        <li class="order-item">
+                            <span>{{ item.dish_name }} - ₹{{ item.price }} - Quantity: {{ item.quantity }}</span>
+                            <form method="POST" action="{% url 'cancel_dish' item.item_id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-cancel">Cancel Dish</button>
+                            </form>
+                        </li>
+                    {% endfor %}
+                </ul>
+                {% if order.payment_status == "Completed" %}
+                    <a href="{% url 'view_ticket' order.order_id %}" class="btn btn-primary btn-block mt-3">View Ticket</a>
+                {% elif order.payment_status == "Failed" %}
+                    <a href="{% url 'retry_pay' order.order_id %}" class="btn btn-warning btn-block mt-3">Pay Now</a>
+                {% endif %}
+                <form method="POST" action="{% url 'cancel_order' order.order_id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-cancel btn-block mt-3">Cancel Entire Order</button>
+                </form>
+            </div>
+        {% endfor %}
     </div>
+    
+
     <!-- Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.7/dist/umd/popper.min.js"></script>

@@ -9,21 +9,24 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-
+import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-ynoc_qgdt0s=rs193d61v0bkpj&(32v^2&&$^5plmd8emk2*1k'
+# SECRET_KEY = 'django-insecure-ynoc_qgdt0s=rs193d61v0bkpj&(32v^2&&$^5plmd8emk2*1k'---------------------------------
+SECRET_KEY = os.getenv('SECRET_KEY')
 
-# SECURITY WARNING: don't run with debug turned on in production!
+
+
 DEBUG = True
+# DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = []
 
@@ -81,14 +84,24 @@ WSGI_APPLICATION = 'gouter.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'gouterdb',
+#         'USER': 'postgres',
+#         'PASSWORD': '1',
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+#     }
+# }-----------------------------------------------------------------------------------------------------------------------------
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'gouterdb',
-        'USER': 'postgres',
-        'PASSWORD': '1',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
     }
 }
 
@@ -154,9 +167,12 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'gouter580@gmail.com'  # Your Gmail address
-EMAIL_HOST_PASSWORD = 'vjghqkzpehrzaeje'  # Your Gmail app password
-DEFAULT_FROM_EMAIL = 'gouter580@gmail.com'
+# EMAIL_HOST_USER = 'gouter580@gmail.com'  # Your Gmail address
+# EMAIL_HOST_PASSWORD = 'vjghqkzpehrzaeje'  # Your Gmail app password
+# DEFAULT_FROM_EMAIL = 'gouter580@gmail.com'------------------------------------------------------------------------------------------------
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
 
 MEDIA_URL = '/media/'
 # MEDIA_ROOT = BASE_DIR / 'media'  # Or wherever you want to store uploaded files
@@ -167,21 +183,34 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend'
 ]
 
+
+# SOCIALACCOUNT_PROVIDERS = {
+#     'google': {
+#         'SCOPE' : [
+#             'profile',
+#             'email'
+#         ],
+#         'APP': {
+#             'client_id': '2550279097-ukhv3tfeq3t5vsrg9qcqe1vvi6blp65s.apps.googleusercontent.com',
+#             'secret': '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',
+#         },
+#         'AUTH_PARAMS': {
+#             'access_type':'online',
+#         }
+#     }
+# }-------------------------------------------------------------------------------------------------------------------------------------------
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
-        'SCOPE' : [
-            'profile',
-            'email'
-        ],
+        'SCOPE': ['profile', 'email'],
         'APP': {
-            'client_id': '2550279097-ukhv3tfeq3t5vsrg9qcqe1vvi6blp65s.apps.googleusercontent.com',
-            'secret': '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',
+            'client_id': os.getenv('GOOGLE_CLIENT_ID'),
+            'secret': os.getenv('GOOGLE_CLIENT_SECRET'),
         },
-        'AUTH_PARAMS': {
-            'access_type':'online',
-        }
+        'AUTH_PARAMS': {'access_type': 'online'},
     }
 }
+
+
 
 SITE_ID = 2
 
@@ -189,6 +218,10 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_URL = '/login/'  # Adjust this to your login URL
 
-RAZORPAY_API_KEY = 'rzp_test_iQQzcualejRK3o'
-RAZORPAY_API_SECRET = 'sXGMA10yOk9qVQmlY6QcV3zq'
+# RAZORPAY_API_KEY = 'rzp_test_iQQzcualejRK3o'
+# RAZORPAY_API_SECRET = 'sXGMA10yOk9qVQmlY6QcV3zq'----------------------------------------------------------------------------
+RAZORPAY_API_KEY = os.getenv('RAZORPAY_API_KEY')
+RAZORPAY_API_SECRET = os.getenv('RAZORPAY_API_SECRET')
+
+
 SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin-allow-popups"
